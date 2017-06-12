@@ -10,7 +10,9 @@ import codecs
 import ir_documents
 
 path_data_file = "dataset/qaclef_pt.xml"
+#path_data_file = "dataset/qaclef_pt_test.xml"
 paths_documents = ['dataset/documents/folha94/', 'dataset/documents/folha95/', 'dataset/documents/publico94/', 'dataset/documents/publico95/']
+#paths_documents = ['dataset/documents/test/']
 
 #Abre o arquivo dataset e retorna uma lista de perguntas em formato tree
 def dataset():
@@ -39,8 +41,8 @@ def with_valid_resposta():
 		if len(question.right_answers) > 0 :
 			ret.append(question)
 
-	#print 'Total Questions: '+str(len(perguntas))
-	print 'Valid Questions: '+str(len(ret))
+	#print 'Total Questions:\t'+str(len(perguntas))
+	#print 'Valid Questions:\t'+str(len(ret))
 	return ret
 
 #Se é um docid válido(FolhaSP ou Público) então retorna um docid no 
@@ -72,21 +74,6 @@ def tree_to_question(tree_question):
 			docid = None
 			if 'docid' in t.attrib :
 				docid = t.attrib['docid']
-			question.right_answers.append(qa_system.Answer(text=t.text, docid=docid))
+				if not t.text is None :
+					question.right_answers.append(qa_system.Answer(text=t.text.encode('utf-8'), docid=docid))
 	return question
-
-def index_documents():
-	print 'Start index'
-	i = ir_documents.Index()
-	for path in paths_documents :
-		for f in os.listdir(path):
-			file = open(path+f, 'r')
-			soup = BeautifulSoup(file.read().decode('latin-1'), "lxml")
-
-			#print soup('doc')
-			for d in soup('doc') :
-				i.add(d)
-			#return
-			print str(os.listdir(path).index(f))+'|'+str(len(os.listdir(path)))+" : "+str(float(os.listdir(path).index(f))/len(os.listdir(path))*100)
-	print 'End index'
-

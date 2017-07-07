@@ -1,51 +1,32 @@
 # -*- coding: utf-8 -*-
+
+import question_process
 import ir_documents
-import treetagger
+#import answer_process
 
-def process_questions(questions):
-	print 'Start questions process'
-	answers = []
-	ic = ir_documents.IndexChave()
-	tagger = treetagger.TreeTagger(language='portuguese')
-	for question in questions :
-		print '\nQuestion '+str(questions.index(question))+'/'+str(len(questions))
-		print 'Q: '+question.text.replace('\n', '')
-		a = process_question(question, ic, tagger)
-		for ra in question.right_answers:
-			print 'Dr: '+ra.docid
-		answers.append(a)
-		if not (a is None or a.docs is None):
-			for i in range(len(a.docs)):
-				print 'Da'+str(i+1)+': '+a.docs[i]
-	return answers
 
-def sintatic_process(question, tagger, class_filter=['V','N']):
-	res = tagger.tag(question)
-	ret = ''
-	for r in res :
-		if r[1][0] in class_filter :
-			ret += r[0] + ' '
-	return ret.strip()
+class QASystem :
+	def __init__(self) :
+		self.qp = question_process.QuestionProcess()
+		self.ir = None
+		self.ap = None
 
-def process_question(question, ic, tagger):
-	answer = Answer()
-	#ToDo - criar resposta (answer.text)
-	#answer.text = 'Lisboa'
-	text = question.text.replace('"','').replace('(','').replace(')','').replace('?','').replace(u'«','').replace(u'»','').replace(',','').replace('.','').replace(';','')
-	#text = sintatic_process(text, tagger)
-	ret = ic.search(text)
-	if not ret is None :
-		answer.docid = ret[0]
-		answer.docs = ret
-	return answer
+class Pair(object):
+	
+	def __init__(self):
+		
+		self.question = None # Perguntas do dataset
+		
+		self.correct_type = None
+		self.question_category = None
 
-class Question:
-	def __init__(self, text=''):
-		self.text = text
-		self.right_answers = []
+		self.question_category = None
+		self.question_restriction = None
 
-class Answer:
-	def __init__(self, text=None, docid=None, docs=[]):
-		self.text = text
-		self.docid = docid
-		self.docs = docs
+		self.answers = [] # Respostas geradas pelo sistema
+		self.correct_answers = [] # Repostas corretas do dataset
+		
+		self.docs_id = [] # Documentos buscados pelo sistema
+		self.correct_docs_id = [] # Documentos corretos do dataset
+
+		self.extractos = [] # Passagens cque contém a resposta

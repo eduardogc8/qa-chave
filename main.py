@@ -3,11 +3,18 @@ import manager_dataset
 import qa_system
 import result
 
-#Seleciona as perguntas com resposta do data_set
-perguntas = manager_dataset.with_valid_resposta()
 
-#Obtem a lista de resposta para as perguntas
-respostas = qa_system.process_questions(perguntas)
+#Controle de testes
+
+# Parâmetros Question Process
+
+valid, invalid = manager_dataset.valid_invalid_pairs()
+
+#Executa o sistema e retorna os pares de pergunta e resposta
+qas = qa_system.QASystem()
+qas.qp.pairs = valid
+qas.qp.train_pairs = invalid
+qas.qp.run()
 
 #Produz o arquivo de resultados
-result.produce(perguntas, respostas)
+result.produce(qas.qp.pairs)

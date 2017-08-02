@@ -21,6 +21,7 @@ def file_name():
     return 'result_'+str(count)
 
 
+# cross-validation output
 def qc_procude(results):
     # Cria um novo arquivo de resultados
     file = open(path_result_file+file_name(), 'w')
@@ -101,8 +102,8 @@ def qc_procude(results):
             t_correct += correct
             tb = AsciiTable(question_classification)
             tb.inner_footing_row_border = True
-            file.write('\nTypes Questions\n'+tb.table+'\n')
-            print('\nTypes Questions\n'+tb.table)
+            file.write('\n'+str(results.index(r))+'/'+str(len(results))+'\n'+tb.table+'\n')
+            print('\n'+str(results.index(r))+'/'+str(len(results))+'\n'+tb.table)
         else:
             print "No pairs for results!"
 
@@ -137,8 +138,8 @@ def qc_procude(results):
     file.close()
 
 
-# Produz os resultados de saida em console e arquivo
-def produce(pairs_in, train_pairs=None):
+# Avalia a saída de apensa um conjunto
+def produce(pairs_in):
     pairs = sorted(pairs_in, key=lambda x: x.correct_classification)
     if len(pairs) > 0:
 
@@ -218,8 +219,7 @@ def produce(pairs_in, train_pairs=None):
             ['N-GRAMS', question_process.NGRAM],
             ['STOPWORDS', question_process.STOPWORD],
             ['STEMMER', question_process.STEMMER],
-            ['LOWER TEXT', question_process.LOWER],
-            ['FILTER PAIRS', question_process.FILTER]
+            ['LOWER TEXT', question_process.LOWER]
             ]
         tb = AsciiTable(dp)
         tb.inner_footing_row_border = False

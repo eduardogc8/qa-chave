@@ -6,57 +6,43 @@ from collections import Counter
 
 
 NGRAM = 1
-STOPWORD = False
-STEMMER = False
-LOWER = False
-FILTER = True
+STOPWORD = False  # Remover as stopwords das questões
+STEMMER = False  # Fazer Stemming nas questões
+LOWER = False  # Passar as questões para minúsculo
 
 
-class QuestionProcess:
+class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de consulta (ToDo)
 
     def __init__(self):
-        self.pairs = []
-        self.train_pairs = []
-        self.n_grams = []
-        self.clss = []  # Tipos de questões
+        self.pairs = []  # Pares para avaliação
+        self.train_pairs = []  # Pares para treinamento
+        self.n_grams = []  # Armazena os n-gramas na memŕoia para não precisar processar eles todas as vezes
+        self.question_class = []  # Classes de questões
 
+    # Classifica as questões dos pares de avaliação
     def run(self):
-        if FILTER:
-            self.filter_pairs()
-        clss = self.classifications()
-        clf = self.train_svm()
-        for pair in self.pairs:
-            r = clf.predict([self.normalize_question(pair.question)])
-            r_classification = clss[r[0]]
-            pair.question_classification = r_classification
+        question_class = self.classifications()
+        clf = self.train_svm()  # Treina uma SVM para classificar
+        print "Predicting..."
+        for pair in self.pairs:  # Para cada para é classificado o tipo da sua questão
+            class_out = clf.predict([self.normalize_question(pair.question)])
+            pair.question_classification = question_class[class_out[0]]
+        print 'End Processing\n'
 
+    # Treina a SVM Linear
     def train_svm(self):
-        print "Train Started"
         clf = sklearn.svm.LinearSVC(verbose=False)
         # from sklearn.naive_bayes import MultinomialNB
         # clf = MultinomialNB()
+        print 'Normalizing...'
         data = self.normalize_questions_train()
         target = self.normalize_classifications_train()
-        print '\nData: '+str(len(data)) + ' | Target: ' + str(len(target))
-
+        print 'Data: '+str(len(data)) + ' | Target: ' + str(len(target))
+        print "Training..."
         clf.fit(data, target)
-        print "Train Completed"
         return clf
 
-    def filter_pairs(self):
-        new_pairs = []
-        for pair in self.pairs:
-            if not (pair.correct_classification is None
-                    or pair.correct_classification.lower().strip() == 'x'):
-                new_pairs.append(pair)
-        self.pairs = new_pairs
-        new_pairs2 = []
-        for pair in self.train_pairs:
-            if not (pair.correct_classification is None
-                    or pair.correct_classification.lower().strip() == 'x'):
-                new_pairs2.append(pair)
-        self.train_pairs = new_pairs2
-
+    # Normaliza a questão para input na SVM
     def normalize_question(self, question):
         n_grams = self.ngrams()
         tokens = self.to_tokens(question)
@@ -69,36 +55,30 @@ class QuestionProcess:
                 data.append(0)
         return data
 
-    def normalize_classification(self, tp):
-        return self.classifications().index(tp)
+    # Normaliza a classe da questão para output na SVM
+    def normalize_classification(self, question_class):
+        return self.classifications().index(question_class)
 
+    # Normaliza o conjunto de treinamento de entrada
     def normalize_questions_train(self):
         data = []
         for pair in self.train_pairs:
             data.append(self.normalize_question(pair.question))
         return data
 
+    # Normaliza o conjunto de treinamento de saída
     def normalize_classifications_train(self):
         target = []
-        clss = self.classifications()
+        question_class = self.classifications()
         for pair in self.train_pairs:
-            target.append(clss.index(pair.correct_classification))
+            target.append(question_class.index(pair.correct_classification))
         return target
 
+    # Cria os possíveis ngram do dataset, processando o conjunto de treinament e o de avaliação
     def ngrams(self):
-        interval_print = 1000
-        aux_count = 0
         if len(self.n_grams) == 0:
+            print "Processing N-grams..."
             for pair in self.train_pairs + self.pairs:
-
-                if aux_count == interval_print:
-                    aux_count = 0
-                    p = str((self.train_pairs + self.pairs).index(pair))
-                    a = str(len(self.train_pairs + self.pairs))
-                    print p + '/' + a
-                else:
-                    aux_count += 1
-
                 tokens = self.to_tokens(pair.question)
                 q_ngrams = Counter(nltk.ngrams(tokens, NGRAM))
 
@@ -108,11 +88,14 @@ class QuestionProcess:
             print 'ngrams: ' + str(len(self.n_grams))
         return self.n_grams
 
+    # Recebe um texto e cria os tokens e reliza um pré-processamento se estiver parametrizado
     def to_tokens(self, text):
         t = text
+
         if LOWER:
             t = text.lower()
         tokens = nltk.word_tokenize(t)
+
         if STEMMER:
             stemmer = nltk.stem.RSLPStemmer()
             for i in range(len(tokens)):
@@ -128,9 +111,10 @@ class QuestionProcess:
             ret = tokens
         return ret
 
+    # Determina quais são as possíveis classes de questões
     def classifications(self):
-        if len(self.clss) == 0:
+        if len(self.question_class) == 0:
             for pair in self.train_pairs + self.pairs:
-                if pair.correct_classification not in self.clss:
-                    self.clss.append(pair.correct_classification)
-        return self.clss
+                if pair.correct_classification not in self.question_class:
+                    self.question_class.append(pair.correct_classification)
+        return self.question_class

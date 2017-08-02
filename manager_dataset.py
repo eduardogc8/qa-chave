@@ -83,7 +83,7 @@ def tree_to_pair(tree_question):
     if 'categoria' in tree_question.attrib:
         p.question_category = tree_question.attrib['categoria']
     if 'tipo' in tree_question.attrib:
-        p.correct_type = tree_question.attrib['tipo']
+        p.question_type = tree_question.attrib['tipo']
     if u'restrição' in tree_question.attrib:
         p.question_restriction = tree_question.attrib[u'restrição']
 
@@ -107,7 +107,7 @@ def tree_to_pair(tree_question):
 
 # Retorna a classificação da questão com base em sua categoria e tipo
 def pair_classification(pair):
-    t = pair.correct_type
+    t = pair.question_type
     c = pair.question_category
     if c == 'COUNT':
         return 'MEASURE'

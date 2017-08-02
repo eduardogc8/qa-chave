@@ -1,5 +1,8 @@
-dataset/
-results/
+dataset/backup
+dataset/documents
+dataset/documents_xml
+dataset/util
+results/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -3,7 +3,7 @@ dataset/documents/
 dataset/documents_xml/
 dataset/util/
 dataset/texts_lines.txt
-results/*
+results/res*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

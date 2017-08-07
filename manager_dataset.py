@@ -158,5 +158,5 @@ def filter_pair(pair):
 def treat(text):
     if text is None:
         return None
-    ret = text.replace('?', '').replace('«','\"').replace('»','\"')
+    ret = text.replace('?', '').replace('«', '\"').replace('»', '\"')
     return ret

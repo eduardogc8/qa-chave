@@ -25,19 +25,19 @@ def file_name():
 def qc_procude(results):
     # Cria um novo arquivo de resultados
     file = open(path_result_file+file_name(), 'w')
+
+    # Momento dos resultados
+    p = time.strftime("%D %H:%M:%S")
+    file.write(p+'\n')
+    print '\nResults - Question Classification\n'+p
+
     classifications = []
     t_questions = 0
     t_correct = 0
+
     for r in results:
-        file.write('\n#'+'\n')
-        print '\n#'
         pairs = sorted(r, key=lambda x: x.correct_classification)
         if len(pairs) > 0:
-            # Momento dos resultados
-            p = time.strftime("%D %H:%M:%S")
-            file.write(p+'\n')
-            print '\nResults - Question Classification\n'+p
-
             count = 0
 
             # Detalhes de cada par
@@ -102,8 +102,8 @@ def qc_procude(results):
             t_correct += correct
             tb = AsciiTable(question_classification)
             tb.inner_footing_row_border = True
-            file.write('\n'+str(results.index(r))+'/'+str(len(results))+'\n'+tb.table+'\n')
-            print('\n'+str(results.index(r))+'/'+str(len(results))+'\n'+tb.table)
+            file.write('\n'+str(results.index(r)+1)+'/'+str(len(results))+'\n'+tb.table+'\n')
+            print('\n'+str(results.index(r)+1)+'/'+str(len(results))+'\n'+tb.table)
         else:
             print "No pairs for results!"
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import sklearn
-from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 
 
@@ -46,19 +45,23 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
 
     # Normaliza o conjunto de treinamento de entrada
     def transform_data_train(self):
-        self.transform = CountVectorizer(strip_accents=None, ngram_range=(MIN_NGRAMS, MAX_NGRAMS), token_pattern=u'(?u)\\b\\w+\\b', lowercase=LOWER)
         questions = []
         for pair in self.train_pairs:
             questions.append(self.treat_question(pair.question))
+        if TFIDF:
+            # TF-IDF
+            print 'TF-IDF Transform'
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            self.transform = TfidfVectorizer(strip_accents=None, ngram_range=(MIN_NGRAMS, MAX_NGRAMS), token_pattern=u'(?u)\\b\\w+\\b', lowercase=LOWER)
+        else:
+            # Bag of Words
+            print 'Bag of Words Transform'
+            from sklearn.feature_extraction.text import CountVectorizer
+            self.transform = CountVectorizer(strip_accents=None, ngram_range=(MIN_NGRAMS, MAX_NGRAMS), token_pattern=u'(?u)\\b\\w+\\b', lowercase=LOWER)
+
         x = self.transform.fit_transform(questions)
         print 'Input size: '+str(len(x.toarray()[0]))
-        if TFIDF:
-            from sklearn.feature_extraction.text import TfidfTransformer
-            self.transformer = TfidfTransformer(smooth_idf=False)
-            tfidf = self.transformer.fit_transform(x.toarray())
-            return tfidf.toarray()
-        else:
-            return x.toarray()
+        return x.toarray()
 
     def transform_data(self, text):
         return self.transform.transform([text]).toarray()

@@ -91,7 +91,8 @@ def tree_to_pair(tree_question):
 
     for t in tree_question:
         if t.tag == 'texto':
-            p.question = t.text
+            if t.text is not None:
+                p.question = t.text.decode('utf-8')
         elif t.tag == 'resposta':
             docid = None
             if 'docid' in t.attrib:

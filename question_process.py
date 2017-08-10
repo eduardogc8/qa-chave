@@ -2,14 +2,25 @@
 
 import sklearn
 import nltk
-
+import gensim
+import numpy as np
 
 MIN_NGRAMS = 1
 MAX_NGRAMS = 1
 TFIDF = False
+WORD2VEC = True
 LOWER = False  # Passar as questões para minúsculo
 STEMMER = False
 STOPWORD = False
+
+#ToDo - OTHER
+class_synonyms = [u'tempo prazo duração período dia data prazo ciclo horas momento ano fase etapa mês século minuto segundo',  # TIME
+                  u'definição manifestação explicação descrição declaração',  # DEFINITION
+                  u'medida grandeza dimensão tamanho proporção quantidade capacidade contagem número escore placar pontuação',  # MEASURE
+                  u'localização posição ponto lugar local posicionamento instalação situação locação colocação',  # LOCATION
+                  u'pessoa personagem humano criatura indivíduo mulher ente consciência cidadão homem sujeito',  # PERSON
+                  u'organismo órgão coletividade entidade associação instituição corporação sociedade corpo constituição físico temperamento compleição estrutura'  # ORGANIZATION
+                  ]
 
 
 class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de consulta (ToDo)
@@ -19,6 +30,7 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
         self.train_pairs = []  # Pares para treinamento
         self.transform = None  # Transforma as questões em input para a SVM
         self.question_class = []  # Classes de questões
+        self.word2vec_model = None
 
     # Classifica as questões dos pares de avaliação
     def question_classification(self):
@@ -26,7 +38,7 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
         clf = self.train_svm()  # Treina uma SVM para classificar
         print "Predicting..."
         for pair in self.pairs:  # Para cada par é classificado o tipo da sua questão
-            class_out = clf.predict(self.transform_data(pair.question))
+            class_out = clf.predict(self.transform_data(self.treat_question(pair.question)))
             pair.question_classification = question_class[class_out[0]]
         print 'Finished Question Classification\n'
 
@@ -60,11 +72,46 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
             self.transform = CountVectorizer(strip_accents=None, ngram_range=(MIN_NGRAMS, MAX_NGRAMS), token_pattern=u'(?u)\\b\\w+\\b', lowercase=LOWER)
 
         x = self.transform.fit_transform(questions)
-        print 'Input size: '+str(len(x.toarray()[0]))
-        return x.toarray()
+        ret = x.toarray()
+        if WORD2VEC:
+            print 'Word2Vec...'
+            self.word2vec_model = gensim.models.Word2Vec.load("dataset/w2v/pt.bin")
+            self.word2vec_model.init_sims(replace=True)
+
+            # Adicionar novas dimensões
+            z = np.zeros((len(ret), len(class_synonyms)))
+            old_ret0_size = len(ret[0])
+            ret = np.concatenate((ret, z), axis=1)
+            # ret = np.zeros((len(ret), len(class_synonyms))) # Comment
+            # old_ret0_size = 0 # Comment
+            # Atribuir valor para as novas dimensões
+            for question in questions:
+                for synonyms in class_synonyms:
+                    distance = self.word2vec_model.wmdistance(question.split(), synonyms.split())
+                    if distance == float('NaN') or distance == float('Inf') or distance == -float('Inf'):
+                        distance = 1.0
+                    i = questions.index(question)
+                    j = old_ret0_size + class_synonyms.index(synonyms)
+                    ret[i][j] = distance
+        print 'Input size: '+str(len(ret[0]))
+        return ret
 
     def transform_data(self, text):
-        return self.transform.transform([text]).toarray()
+        ret = self.transform.transform([self.treat_question(text)]).toarray()
+
+        if WORD2VEC:
+            z = np.zeros((1, len(class_synonyms)))
+            old_ret0_size = len(ret[0])
+            ret = np.concatenate((ret, z), axis=1)
+            # ret = np.zeros((len(ret), len(class_synonyms))) # Comment
+            # old_ret0_size = 0 # Comment
+            for synonyms in class_synonyms:
+                distance = self.word2vec_model.wmdistance(text.split(), synonyms.split())
+                if distance == float('NaN') or distance == float('Inf') or distance == -float('Inf'):
+                    distance = 1.0
+                j = old_ret0_size + class_synonyms.index(synonyms)
+                ret[0][j] = distance
+        return ret
 
     # Transforma o conjunto de treinamento de saída
     def transform_classifications_train(self):
@@ -90,7 +137,7 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
                     ret.append(token)
         else:
             ret = tokens
-        return " ".join(str(x) for x in ret)
+        return " ".join(str(x) for x in ret).decode('utf-8')
 
     # Determina quais são as possíveis classes de questões
     def classifications(self):

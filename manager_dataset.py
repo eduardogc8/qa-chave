@@ -9,6 +9,7 @@ paths_documents = ['dataset/documents/folha94/', 'dataset/documents/folha95/',
                    'dataset/documents/publico94/', 'dataset/documents/publico95/']
 
 # path_questions = "dataset/questions_test.xml"
+# path_questions = "dataset/questions_test_mini.xml"
 # paths_documents = ['dataset/documents/test/']
 
 

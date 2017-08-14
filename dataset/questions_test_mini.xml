@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<qa>
+
+<pergunta ano="2005" id_org="0802" categoria="F" tipo="PERSON" restrição="DATE" ling_orig="PT" tarefa_pt="0102" tarefa_es="187" tarefa_nl="195">
+	<texto>Que professor recebeu o Prémio Nobel?</texto>
+	<resposta docid="FOLHA-940114-119" n="1">Pinatubo</resposta>
+</pergunta>
+
+<pergunta ano="2005" id_org="0802" categoria="F" tipo="PERSON" restrição="DATE" ling_orig="PT" tarefa_pt="0102" tarefa_es="187" tarefa_nl="195">
+	<texto>Qual a princesa da Dinamarca?</texto>
+	<resposta docid="FOLHA-940114-119" n="1">Pinatubo</resposta>
+</pergunta>
+
+<pergunta ano="2005" id_org="0802" categoria="F" tipo="ORGANIZATION" restrição="DATE" ling_orig="PT" tarefa_pt="0102" tarefa_es="187" tarefa_nl="195">
+	<texto>Que companhia produz carro?</texto>
+	<resposta docid="FOLHA-940114-119" n="1">Pinatubo</resposta>
+</pergunta>
+
+<pergunta ano="2005" id_org="0802" categoria="F" tipo="ORGANIZATION" restrição="DATE" ling_orig="PT" tarefa_pt="0102" tarefa_es="187" tarefa_nl="195">
+	<texto>Que exército ocupou o Haiti?</texto>
+	<resposta docid="FOLHA-940114-119" n="1">Pinatubo</resposta>
+</pergunta>
+
+<pergunta ano="2005" id_org="0802" categoria="F" tipo="PERSON" restrição="DATE" ling_orig="PT" tarefa_pt="0102" tarefa_es="187" tarefa_nl="195">
+	<texto>Que presidente ganhou o prémio Nobel?</texto>
+	<resposta docid="FOLHA-940114-119" n="1">Pinatubo</resposta>
+</pergunta>
+
+<pergunta ano="2005" id_org="0802" categoria="F" tipo="ORGANIZATION" restrição="DATE" ling_orig="PT" tarefa_pt="0102" tarefa_es="187" tarefa_nl="195">
+	<texto>Que empresa fica na Dinamarca?</texto>
+	<resposta docid="FOLHA-940114-119" n="1">Pinatubo</resposta>
+</pergunta>	
+
+</qa>

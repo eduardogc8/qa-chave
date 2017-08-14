@@ -100,8 +100,8 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
                 i = questions.index(question)
                 new_input = np.concatenate((ret[i][:old_ret0_size], w2v_input))
                 ret[i] = new_input
-                np.set_printoptions(threshold='nan')
-                print ret[i]
+                # np.set_printoptions(threshold='nan')
+                # print ret[i]
         print 'Input size: '+str(len(ret[0]))
         return ret
 
@@ -135,7 +135,7 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
                 self.word2vec_distances[class_term] = {}
                 for term in self.dictionary_terms:
                     if term in self.word2vec_model and class_term in self.word2vec_model:
-                        similarity = self.word2vec_model.similarity(class_term, term)
+                        similarity = self.word2vec_model.wmdistance([class_term], [term])
                     else:
                         similarity = 0
                     self.word2vec_distances[class_term][term] = similarity

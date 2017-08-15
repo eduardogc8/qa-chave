@@ -87,8 +87,8 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
             z = np.zeros((len(ret), len(self.transform.get_feature_names()*len(class_terms))))
             old_ret0_size = len(ret[0])
             ret = np.concatenate((ret, z), axis=1)
-            ret = np.zeros((len(ret), len(self.transform.get_feature_names()*len(class_terms)))) # Comment
-            old_ret0_size = 0 # Comment
+            # ret = np.zeros((len(ret), len(self.transform.get_feature_names()*len(class_terms)))) # Comment
+            # old_ret0_size = 0 # Comment
             # Atribuir valor para as novas dimensões
             count = 0
             for question in questions:
@@ -112,8 +112,8 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
             z = np.zeros((1, len(self.transform.get_feature_names()*len(class_terms))))
             old_ret0_size = len(ret[0])
             ret = np.concatenate((ret, z), axis=1)
-            ret = np.zeros((1, len(self.transform.get_feature_names()*len(class_terms)))) # Comment
-            old_ret0_size = 0 # Comment
+            # ret = np.zeros((1, len(self.transform.get_feature_names()*len(class_terms)))) # Comment
+            # old_ret0_size = 0 # Comment
             # Atribuir valor para as novas dimensões
             w2v_input = self.word2vec_input(self.treat_question(text))
             new_input = np.concatenate((ret[0][:old_ret0_size], w2v_input))
@@ -135,9 +135,9 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
                 self.word2vec_distances[class_term] = {}
                 for term in self.dictionary_terms:
                     if term in self.word2vec_model and class_term in self.word2vec_model:
-                        similarity = self.word2vec_model.wmdistance([class_term], [term])
+                        similarity = self.word2vec_model.similarity([class_term], [term])
                     else:
-                        similarity = 0
+                            similarity = 0
                     self.word2vec_distances[class_term][term] = similarity
 
         l = len(self.dictionary_terms)

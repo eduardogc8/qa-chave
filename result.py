@@ -214,6 +214,7 @@ def produce(pairs_in):
         tb.inner_footing_row_border = True
         file.write('\nTypes Questions\n'+tb.table+'\n')
         print('\nTypes Questions\n'+tb.table)
+        '''
         # Type question parameters
         dp = [
             ['N-GRAMS', question_process.NGRAM],
@@ -226,7 +227,7 @@ def produce(pairs_in):
         tb.inner_heading_row_border = False
         file.write('\nQuestion Type Parameters:\n'+tb.table+'\n')
         print ('\nQuestion Type Parameters:\n'+tb.table)
-
+        '''
         file.close()
 
     else:

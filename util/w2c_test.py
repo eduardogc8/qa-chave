@@ -15,7 +15,7 @@ class_synonyms_ = [u'tempo prazo duração período dia data ciclo horas momento
                   ]
 
 class_synonyms = [
-                  u'pessoa personagem humano criatura indivíduo mulher cidadão homem sujeito criador autor presidente senador prefeito deputado vereador capitão secretário papa diretor santo scritor deuses rei rainha príncipe filho pai mãe avo tio primo irmão músico inventor princesa criança filho sobrinho celebridade marido esposa cantor engenheiro arquiteto fundador artista estudioso professor proprietário',  # PERSON
+                  u'pessoa personagem humano criatura indivíduo mulher cidadão homem sujeito criador autor presidente senador prefeito deputado vereador capitão secretário papa diretor santo escritor deuses rei rainha príncipe filho pai mãe avo tio primo irmão músico inventor princesa criança filho sobrinho celebridade marido esposa cantor engenheiro arquiteto fundador artista estudioso professor proprietário',  # PERSON
                   u'organização partido empresa grupo polícia companhia fundação time clube orquestra circo estúdio universidade fábrica armazém company cidade agência banda seleção departamento país academia museu prefeitura equipe força conselho'  # ORGANIZATION
                   ]
 
@@ -25,6 +25,7 @@ def test(pairs):
     ret = []
     for pair in pairs:
         print pairs.index(pair), '/', len(pairs)
+        if not (pair.correct_classification == 'PERSON' or pair.correct_classification == 'ORGANIZATION'): continue
         text = pair.question
         stopwords = nltk.corpus.stopwords.words('portuguese')
         tokens = nltk.word_tokenize(text)
@@ -33,7 +34,7 @@ def test(pairs):
             if not (u''+token) in stopwords:
                 tkns.append(token)
         text = " ".join(str(x) for x in tkns).decode('utf-8')
-        if not (pair.correct_classification == 'PERSON' or pair.correct_classification == 'ORGANIZATION'): continue
+
         distances = {}
         for class_term in class_synonyms:
             distance = w2v.wmdistance(text.decode('utf-8').split(), class_term.split())

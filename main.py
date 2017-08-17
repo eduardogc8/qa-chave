@@ -12,7 +12,7 @@ v, inv = manager_dataset.valid_invalid_pairs()
 # Pares para treinamento e testes pegos aleatoriamente (usando SEED) para cross-validation (k-fold)
 k = 8  # Está sendo usado k = 8
 SEED = 1  # Está sendo usando a SEED 1
-#random.seed(SEED)
+random.seed(SEED)
 p = v + inv  # As questões válidas e inválidas são juntadas e embaralhadas
 random.shuffle(p)
 s = len(p)/k  # Tamanho do conjunto de avaliação

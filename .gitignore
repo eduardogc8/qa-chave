@@ -1,8 +1,9 @@
-dataset/backup/
-dataset/documents/
-dataset/documents_xml/
-dataset/util/
-dataset/texts_lines.txt
+data/backup/
+data/word_embedding/
+datas/documents/
+data/documents_xml/
+data/util/
+data/texts_lines.txt
 results/r*
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -10,14 +10,14 @@ from util import w2c_test
 v, inv = manager_dataset.valid_invalid_pairs()
 
 # Pares para treinamento e testes pegos aleatoriamente (usando SEED) para cross-validation (k-fold)
-k = 8  # Está sendo usado k = 8
+k = 5  # Está sendo usado k = 8
 SEED = 1  # Está sendo usando a SEED 1
 random.seed(SEED)
 p = v + inv  # As questões válidas e inválidas são juntadas e embaralhadas
 random.shuffle(p)
 s = len(p)/k  # Tamanho do conjunto de avaliação
 results = []  # Irá conter k resultados para o cross-validation (k-fold)
-'''
+
 for i in range(k):
     print (i+1), '/', k
     a = p[i*s:i*s+s]  # Conjunto de avaliação
@@ -28,5 +28,5 @@ for i in range(k):
     qas.questionProcess.question_classification()
     results.append(qas.questionProcess.pairs)
 result.qc_procude(results)
-'''
-result.produce(w2c_test.test(p))
+
+#result.produce(w2c_test.test(p))

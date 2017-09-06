@@ -8,12 +8,12 @@ import numpy as np
 MIN_NGRAMS = 1
 MAX_NGRAMS = 1
 TFIDF = False
-WORD2VEC = True
+WORD2VEC = False
 LOWER = False  # Passar as questões para minúsculo
 STEMMER = False
 STOPWORD = False
 
-#ToDo - OTHER
+# ToDo - OTHER
 class_synonyms = [u'tempo prazo duração período dia data ciclo horas momento ano fase etapa mês século minuto segundo',  # TIME
                   u'definição manifestação explicação descrição declaração',  # DEFINITION
                   u'medida grandeza dimensão tamanho proporção quantidade capacidade contagem número escore placar pontuação',  # MEASURE
@@ -52,7 +52,9 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
 
     # Treina a SVM Linear
     def train_svm(self):
+        from sklearn.svm import SVC
         clf = sklearn.svm.LinearSVC(verbose=False)
+        #clf = SVC(kernel="linear")
         # from sklearn.naive_bayes import MultinomialNB
         # clf = MultinomialNB()
         print 'Transforming...'
@@ -126,7 +128,7 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
 
         ret = np.zeros(len(self.dictionary_terms)*len(class_terms))
         if self.word2vec_model is None:
-            self.word2vec_model = gensim.models.Word2Vec.load("dataset/w2v/pt.bin")
+            self.word2vec_model = gensim.models.Word2Vec.load("data/word_embedding/pt.bin")
             self.word2vec_model.init_sims(replace=True)
 
         if self.word2vec_distances is None:

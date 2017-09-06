@@ -16,7 +16,11 @@ class_synonyms_ = [u'tempo prazo duração período dia data ciclo horas momento
 
 class_synonyms = [
                   u'pessoa personagem humano criatura indivíduo mulher cidadão homem sujeito criador autor presidente senador prefeito deputado vereador capitão secretário papa diretor santo escritor deuses rei rainha príncipe filho pai mãe avo tio primo irmão músico inventor princesa criança filho sobrinho celebridade marido esposa cantor engenheiro arquiteto fundador artista estudioso professor proprietário',  # PERSON
-                  u'organização partido empresa grupo polícia companhia fundação time clube orquestra circo estúdio universidade fábrica armazém company cidade agência banda seleção departamento país academia museu prefeitura equipe força conselho'  # ORGANIZATION
+                  u'organização partido empresa grupo polícia companhia fundação time clube orquestra circo estúdio universidade fábrica armazém company cidade agência banda seleção departamento país academia museu prefeitura equipe força conselho',  # ORGANIZATION
+                  u'tempo prazo duração período dia data ciclo horas momento ano fase etapa mês século minuto segundo',  # TIME
+                  u'definição manifestação explicação descrição declaração',  # DEFINITION
+                  u'medida grandeza dimensão tamanho proporção quantidade capacidade contagem número escore placar pontuação',  # MEASURE
+                  u'localização posição ponto lugar local posicionamento instalação situação locação colocação'  # LOCATION
                   ]
 
 def test(pairs):
@@ -24,8 +28,9 @@ def test(pairs):
     w2v.init_sims(replace=True)
     ret = []
     for pair in pairs:
-        print pairs.index(pair), '/', len(pairs)
-        if not (pair.correct_classification == 'PERSON' or pair.correct_classification == 'ORGANIZATION'): continue
+        #print pairs.index(pair), '/', len(pairs)
+        #if not (pair.correct_classification == 'PERSON' or pair.correct_classification == 'ORGANIZATION'): continue
+        if pair.correct_classification == 'OTHER': continue
         text = pair.question
         stopwords = nltk.corpus.stopwords.words('portuguese')
         tokens = nltk.word_tokenize(text)

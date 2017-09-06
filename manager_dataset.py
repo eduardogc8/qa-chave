@@ -4,13 +4,13 @@ import xml.etree.ElementTree as et
 import qa_system
 import re
 
-path_questions = "dataset/questions.xml"
-paths_documents = ['dataset/documents/folha94/', 'dataset/documents/folha95/',
-                   'dataset/documents/publico94/', 'dataset/documents/publico95/']
+path_questions = "data/questions.xml"
+paths_documents = ['data/documents/folha94/', 'data/documents/folha95/',
+                   'data/documents/publico94/', 'data/documents/publico95/']
 
-# path_questions = "dataset/questions_test.xml"
-# path_questions = "dataset/questions_test_mini.xml"
-# paths_documents = ['dataset/documents/test/']
+# path_questions = "data/questions_test.xml"
+# path_questions = "data/questions_test_mini.xml"
+# paths_documents = ['data/documents/test/']
 
 
 # Verifica se os dados já estão indexados, se não estiverem é feito a indexação

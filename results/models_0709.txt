@@ -1,0 +1,45 @@
+model                score
+-----------------  -------
+SVC                 0.8204
+SVC lower           0.8204
+SVCt                0.8172
+SVCt lower          0.8172
+et                  0.8086
+ett                 0.7982
+SVC rbft            0.7935
+NB mult             0.7629
+NB multt            0.7424
+SVC w2v600          0.7297
+SVC w2v300          0.7254
+SVC wn2v300         0.7251
+SVC wn2v100         0.7075
+SVC w2vt            0.7006
+SVC w2v100          0.6939
+SVC w2v             0.6823
+SVC wn2v50          0.6809
+et w2v300           0.6775
+SVC w2v600t         0.6760
+et w2v              0.6746
+et w2v100           0.6714
+et w2vt             0.6708
+et wn2v300          0.6702
+et wn2v100          0.6700
+SVC wn2v300t        0.6677
+SVC wn2v50t         0.6601
+et wn2v100t         0.6587
+SVC wn2v100t        0.6576
+et w2v100t          0.6546
+SVC w2v100t         0.6527
+SVC w2v100t lower   0.6527
+SVC w2v300t         0.6521
+et wn2v300t         0.6506
+et w2v300t          0.6477
+SVC w2v50           0.6411
+SVC w2v50t          0.6278
+NB bern             0.6125
+NB bernt            0.6125
+SVC rbf             0.5707
+SVC poly            0.1801
+SVC polyt           0.1801
+SVC sigmoid         0.1801
+SVC sigmoidt        0.1801

@@ -1,0 +1,20 @@
+model             score
+--------------  -------
+LSVC tfidf       0.8221
+LSVC             0.8207
+SVC lin          0.8204
+SVC lin tfidf    0.8172
+et               0.8077
+et tfidf         0.7987
+SVC rbf          0.7736
+NB mult          0.7629
+SVC poly         0.7468
+NB mult tfidf    0.7424
+LSVC w2v         0.7329
+SVC rbf tfidf    0.7018
+LSVC w2v tfidf   0.6942
+et w2v           0.6752
+et w2v tfidf     0.6593
+NB bern tfidf    0.6125
+NB bern          0.6125
+SVC poly tfidf   0.1801

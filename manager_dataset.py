@@ -154,11 +154,13 @@ def filter_pair(pair):
         return False
     if pair.correct_classification == 'OBJECT':
         return False
+    if pair.correct_classification == 'OTHER':
+        return False
     return True
 
 
 def treat(text):
     if text is None:
         return None
-    ret = text.replace('?', '').replace('«', '\"').replace('»', '\"')
+    ret = text.replace('?', '').replace(u'«', '\"').replace(u'»', '\"')
     return ret

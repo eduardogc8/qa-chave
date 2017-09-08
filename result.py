@@ -4,7 +4,6 @@ import os.path
 from terminaltables import AsciiTable
 import time
 import sys
-import question_process
 from operator import itemgetter
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -35,6 +34,8 @@ def qc_procude(results):
     t_questions = 0
     t_correct = 0
 
+    error_class = {}
+
     for r in results:
         pairs = sorted(r, key=lambda x: x.correct_classification)
         if len(pairs) > 0:
@@ -49,18 +50,26 @@ def qc_procude(results):
             for pair in pairs:
                 count += 1
 
-                # Detalhes do par
-                details = []
-                details.append(count)
-                details.append(pair.question.replace('\n', '').decode('utf-8'))
-                # if len(pair.correct_answers) > 0 :
-                #    #print type(pair.correct_answers[0].replace('\n',''))
-                #    details.append(pair.correct_answers[0].replace('\n','').decode('utf-8'))
-                # else :
-                #    details.append('')
-                details.append(pair.correct_classification)
-                details.append(pair.question_classification)
-                pairs_details.append(details)
+                if not pair.correct_classification == pair.question_classification:
+                    # Detalhes do par
+                    if pair.correct_classification not in error_class:
+                        error_class[pair.correct_classification] = {}
+                    if pair.question_classification not in error_class[pair.correct_classification]:
+                        error_class[pair.correct_classification][pair.question_classification] = 0
+                    error_class[pair.correct_classification][pair.question_classification] += 1
+
+                    details = []
+                    details.append(count)
+                    details.append(pair.question.replace('\n', '').decode('utf-8'))
+                    # if len(pair.correct_answers) > 0 :
+                    #    #print type(pair.correct_answers[0].replace('\n',''))
+                    #    details.append(pair.correct_answers[0].replace('\n','').decode('utf-8'))
+                    # else :
+                    #    details.append('')
+                    details.append(pair.correct_classification)
+                    details.append(pair.question_classification)
+
+                    pairs_details.append(details)
 
                 # Type question
                 new = True
@@ -137,6 +146,10 @@ def qc_procude(results):
     print ('\nFinal Results:\n'+tb.table)
     file.close()
 
+    for erro in error_class:
+        print erro
+        for e in error_class[erro]:
+            print '----'+erro+' - '+e+' : '+str(error_class[erro][e])
 
 # Avalia a saída de apensa um conjunto
 def produce(pairs_in):

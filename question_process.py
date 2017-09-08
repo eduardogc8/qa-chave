@@ -43,20 +43,13 @@ class QuestionProcess:  # Determina a classe da questão (ok) e gera a query de 
         print "Predicting..."
         for pair in self.pairs:  # Para cada par é classificado o tipo da sua questão
             data_in = self.transform_data(self.treat_question(pair.question))
-            #print pair.question
-            #print self.treat_question(pair.question)
-            #print data_in
             class_out = clf.predict(data_in)
             pair.question_classification = question_class[class_out[0]]
         print 'Finished Question Classification\n'
 
     # Treina a SVM Linear
     def train_svm(self):
-        from sklearn.svm import SVC
         clf = sklearn.svm.LinearSVC(verbose=False)
-        #clf = SVC(kernel="linear")
-        # from sklearn.naive_bayes import MultinomialNB
-        # clf = MultinomialNB()
         print 'Transforming...'
         data = self.transform_data_train()
         target = self.transform_classifications_train()

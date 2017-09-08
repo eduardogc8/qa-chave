@@ -10,8 +10,8 @@ from util import w2c_test
 v, inv = manager_dataset.valid_invalid_pairs()
 
 # Pares para treinamento e testes pegos aleatoriamente (usando SEED) para cross-validation (k-fold)
-k = 5  # Está sendo usado k = 8
-SEED = 1  # Está sendo usando a SEED 1
+k = 5  # Está sendo usado k = 5
+SEED = 0  # Está sendo usando a SEED 0
 random.seed(SEED)
 p = v + inv  # As questões válidas e inválidas são juntadas e embaralhadas
 random.shuffle(p)

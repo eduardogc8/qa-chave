@@ -24,18 +24,25 @@ def dataset():
     return tree.getroot()
 
 
+# Retorna todos os pares em um lista
+def pairs():
+    _, _, ret = valid_invalid_pairs()
+    return ret
+
+
 # Retorna todas os pares do dataset que tem ao menos uma resposta válida,
 # também, é retornado os pares inválidos
-# Válida significa: o par contém resposta e a resposta tem um docid de origem válida (FolhaSP ou Público)
+# Válido significa: o par contém resposta e a resposta tem um docid de origem válida (FolhaSP ou Público)
 def valid_invalid_pairs():
-    ret = []
-    ret2 = []
+    ret = []  # Valid
+    ret2 = []  # Invalid
+    ret3 = []  # All
     pairs = dataset()
 
     for pair in pairs:
         pair = tree_to_pair(pair)
 
-        if pair.question is None or pair.question == '' or not filter_pair(pair):
+        if pair.question is None or pair.question.strip() == '':
             continue
         else:
             valid_answers = []
@@ -53,10 +60,10 @@ def valid_invalid_pairs():
                 ret.append(pair)
             else:
                 ret2.append(pair)
-
+        ret3.append(pair)
     # print 'Total Questions:\t'+str(len(pairs))
     # print 'Valid Questions:\t'+str(len(ret))
-    return ret, ret2
+    return ret, ret2, ret3
 
 
 # Se é um docid válido(FolhaSP ou Público) então retorna um docid no
@@ -93,7 +100,10 @@ def tree_to_pair(tree_question):
     for t in tree_question:
         if t.tag == 'texto':
             if t.text is not None:
-                p.question = t.text.decode('utf-8')
+                if type(t.text) == type(''): 
+                    p.question = t.text.decode('utf-8')
+                else:
+                    p.question = t.text
         elif t.tag == 'resposta':
             docid = None
             if 'docid' in t.attrib:
@@ -144,19 +154,6 @@ def pair_classification(pair):
     if c == 'TIME':
         return 'TIME'
     return c
-
-
-# Determina se o par será utilizado
-def filter_pair(pair):
-    if pair.correct_classification == 'X':
-        return False
-    if pair.correct_classification == 'MANNER':
-        return False
-    if pair.correct_classification == 'OBJECT':
-        return False
-    if pair.correct_classification == 'OTHER':
-        return False
-    return True
 
 
 def treat(text):

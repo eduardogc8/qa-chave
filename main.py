@@ -8,7 +8,7 @@ from util import w2c_test
 
 # Obtem os pares válidos (com resposta) e inválidos (sem respostas)
 v, inv = manager_dataset.valid_invalid_pairs()
-
+print 'valid:',len(v),'invalid:',len(inv)
 # Pares para treinamento e testes pegos aleatoriamente (usando SEED) para cross-validation (k-fold)
 k = 5  # Está sendo usado k = 5
 SEED = 0  # Está sendo usando a SEED 0

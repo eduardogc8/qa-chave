@@ -39,7 +39,9 @@ def valid_invalid_pairs():
     ret3 = []  # All
     pairs = dataset()
 
+    tot = 0
     for pair in pairs:
+        tot += 1
         pair = tree_to_pair(pair)
 
         if pair.question is None or pair.question.strip() == '':
@@ -63,6 +65,8 @@ def valid_invalid_pairs():
         ret3.append(pair)
     # print 'Total Questions:\t'+str(len(pairs))
     # print 'Valid Questions:\t'+str(len(ret))
+    print 'Total:',tot
+    print 'valid:',len(ret),'invalid:',len(ret2)
     return ret, ret2, ret3
 
 

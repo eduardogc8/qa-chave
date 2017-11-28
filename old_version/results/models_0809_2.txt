@@ -1,0 +1,22 @@
+model                score
+-----------------  -------
+LSVC w2v600         0.8742
+LSVC tfidf          0.8694
+LSVC                0.8667
+LSVC w2v            0.8577
+LSVC w2v300         0.8570
+SVC rbf             0.8422
+NB mult             0.8223
+SVC poly            0.8180
+SVC rbf tfidf       0.8106
+LSVC w2v tfidf      0.8042
+LSVC w2v100         0.8022
+NB mult tfidf       0.7860
+LSVC w2v600 tfidf   0.7282
+LSVC w2v50          0.7271
+SVC poly tfidf      0.7145
+LSVC w2v300 tfidf   0.7053
+LSVC w2v100 tfidf   0.6992
+NB bern tfidf       0.6790
+NB bern             0.6790
+LSVC w2v50 tfidf    0.6370

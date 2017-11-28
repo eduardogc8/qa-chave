@@ -2,6 +2,7 @@ data/
 data/backup/
 data/word_embedding/
 datas/documents/
+data/documents/
 data/documents_xml/
 data/util/
 data/texts_lines.txt

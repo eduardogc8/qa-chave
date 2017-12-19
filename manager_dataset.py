@@ -29,6 +29,7 @@ def questions():
         q['year'] = question.attrib['ano']
         q['category'] = question.attrib['categoria']
         q['type'] = question.attrib['tipo']
+        q['class'] = pair_classification(q['category'], q['type'])
         q['ling'] = question.attrib['ling_orig']
         if u'restrição' in question.attrib:
             q['restriction'] = question.attrib[u'restrição']
@@ -72,9 +73,7 @@ def validate_docid(docid):
 
 
 # Return the right question class based in category and type attributes
-def pair_classification(pair):
-    t = pair.question_type
-    c = pair.question_category
+def pair_classification(c, t):
     if c == 'COUNT':
         return 'MEASURE'
     if c == 'D' or c == 'DEFINITION':

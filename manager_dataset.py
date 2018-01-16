@@ -19,7 +19,7 @@ def questions_tree():
 
 
 # Return a list with all questions in dataset
-def questions():
+def questions(treated=False):
     ret = []
     count = 0
     for question in questions_tree():
@@ -30,6 +30,7 @@ def questions():
         q['category'] = question.attrib['categoria']
         q['type'] = question.attrib['tipo']
         q['class'] = pair_classification(q['category'], q['type'])
+        q['predic_class'] = ''
         q['ling'] = question.attrib['ling_orig']
         if u'restrição' in question.attrib:
             q['restriction'] = question.attrib[u'restrição']
@@ -52,8 +53,42 @@ def questions():
                 q['extracts'].append({'extract':e.text, 'n':e.attrib['n'], 'answer_n':e.attrib['resposta_n']})
         count += 1
         ret.append(q)
+    if treated:
+        ret = treat_questions_text(ret)
+        ret = select_questions_by_text(ret)
     return ret
 
+
+# Question text is treated
+def treat_questions_text(questions):
+    for question in questions:
+        if question['question'] is None:
+            question['question'] = ''
+        question['question'].replace('\n','').replace('\\', '').replace(u'«', '"').replace(u'»', '"').strip()
+    return questions
+
+        
+# Return questions with some text
+def select_questions_by_text(questions):
+    ret = []
+    for question in questions:
+        if len(question['question']) > 0:
+            ret.append(question)
+    return ret
+
+
+# Split question in train and test
+# The questions that has an answer will be used for test while another questions will be used for train
+def split_questions(questions):
+    train_questions = []
+    test_questions = []
+    for question in questions:
+        if len(question['answers']) > 0:
+            test_questions.append(question)
+        else:
+            train_questions.append(question)
+    return train_questions, test_questions
+    
 
 # Check if a docid is valid (FolhaSP or Público) so return a docid in the
 # documents docid else return None

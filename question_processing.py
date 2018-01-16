@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-from collections import Counter, defaultdict
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
+from collections import Counter, defaultdict
+import matplotlib.pyplot as plt
+import numpy as np
+import itertools
+import nltk
 
+
+
+
+##### QUESTION CLASSIFICATION #####
 
 def count_vectorizer(MIN_GRAM=1, MAX_GRAM=1, LOWER=True):
     return CountVectorizer(analyzer=lambda x: x, strip_accents=None, ngram_range=(MIN_GRAM, MAX_GRAM), 
@@ -134,5 +142,92 @@ def svm_classifier():
 def train_model(X, y, classifier, vectorizer):
     model = Pipeline([("vector_model", vectorizer), ("classifer", classifier)])
     model.fit(X, y)
-    print('end training')
     return model
+
+
+# Remove questions with incosiderate_classes
+def remove_incosiderate_classes(questions):
+    ret = []
+    for question in questions:
+        if not inconsiderate_classes(question['class']):
+            ret.append(question)
+    return ret
+
+# Separete the questions in data (X) and label (y)
+def separete_questions(questions):
+    X = []
+    y = []
+    for question in questions:
+        text = question['question']
+        text = text.lower()
+        text = nltk.word_tokenize(text)
+        X.append(text)
+        y.append(question['class'])
+    return X, y
+    
+# Select what class will be inconsiderate in question classification
+def inconsiderate_classes(c):
+    if c == None:
+        return True
+    if c == 'X':
+        return True
+    if c == 'MANNER':
+        return True
+    if c == 'OBJECT':
+        return True
+    if c == 'OTHER':
+        return True
+    return False
+
+# All questions recive in question['predict_class'] the predicted answer type from the model
+def predict_answer_type(model, questions):
+    ret = []
+    for question in questions:
+        text = question['question']
+        text = text.lower()
+        text = nltk.word_tokenize(text)
+        question['predict_class'] = model.predict([text])[0]
+    return ret
+
+## TESTING ##
+
+def testing(model, X_test, y_test):
+        
+        result = model.predict(X_test)
+        print('Accuracy:', accuracy_score(result, y_test))
+        print('F1 Score:', f1_score(result, y_test, average="macro"))
+        cm = confusion_matrix(result, y_test, labels=['DEFINITION', 'LOCATION', 'MEASURE', 'ORGANIZATION', 'PERSON', 'TIME'])
+        return cm
+
+def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+        
+        
+        
+        
+
+

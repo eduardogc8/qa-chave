@@ -4,12 +4,9 @@ import xml.etree.ElementTree as et
 import re
 
 path_questions = "data/questions.xml"
-paths_documents = ['data/documents/folha94/', 'data/documents/folha95/',
-                   'data/documents/publico94/', 'data/documents/publico95/']
 
 # path_questions = "data/questions_test.xml"
 # path_questions = "data/questions_test_mini.xml"
-# paths_documents = ['data/documents/test/']
 
 
 # Open questions file and return it tree
@@ -38,7 +35,7 @@ def questions(treated=False):
             q['restriction'] = question.attrib['restricao']
         if q['restriction'] == 'NO': q['restriction'] = 'NONE'
         if q['restriction'] == 'X': q['restriction'] = ''
-        
+
         q['answers'] = []
         q['extracts'] = []
 
@@ -64,10 +61,10 @@ def treat_questions_text(questions):
     for question in questions:
         if question['question'] is None:
             question['question'] = ''
-        question['question'].replace('\n','').replace('\\', '').replace(u'«', '"').replace(u'»', '"').strip()
+        question['question'] = question['question'].replace('\n','').replace('\\', '').replace(u'«', '').replace(u'»', '').replace(u'"', '').replace(u'\"', '').strip()
     return questions
 
-        
+
 # Return questions with some text
 def select_questions_by_text(questions):
     ret = []
@@ -88,7 +85,7 @@ def split_questions(questions):
         else:
             train_questions.append(question)
     return train_questions, test_questions
-    
+
 
 # Check if a docid is valid (FolhaSP or Público) so return a docid in the
 # documents docid else return None

@@ -16,11 +16,11 @@ import nltk
 ##### QUESTION CLASSIFICATION #####
 
 def count_vectorizer(MIN_GRAM=1, MAX_GRAM=1, LOWER=True):
-    return CountVectorizer(analyzer=lambda x: x, strip_accents=None, ngram_range=(MIN_GRAM, MAX_GRAM), 
+    return CountVectorizer(analyzer=lambda x: x, strip_accents=None, ngram_range=(MIN_GRAM, MAX_GRAM),
                            token_pattern=u'(?u)\\\\b\\\\w+\\\\b', lowercase=LOWER)
 
 def tfidf_vectorizer(MIN_GRAM=1, MAX_GRAM=1, LOWER=True):
-    return TfidfVectorizer(analyzer=lambda x: x, strip_accents=None, ngram_range=(MIN_GRAM, MAX_GRAM), 
+    return TfidfVectorizer(analyzer=lambda x: x, strip_accents=None, ngram_range=(MIN_GRAM, MAX_GRAM),
                            token_pattern=u'(?u)\\\\b\\\\w+\\\\b', lowercase=LOWER)
 
 
@@ -28,13 +28,13 @@ class MeanEmbeddingVectorizer(object):
     def __init__(self, word2vec):
         self.word2vec = word2vec
         self.dim = len(word2vec)
-    
+
     def fit(self, X, y):
         return self
 
     def transform(self, X):
         ret = np.array([
-            np.mean([self.word2vec[w] for w in words if w in self.word2vec] 
+            np.mean([self.word2vec[w] for w in words if w in self.word2vec]
                     or [np.zeros(self.dim)], axis=0)
             for words in X
         ])
@@ -54,7 +54,7 @@ class HybridVectorizer(object):
     def transform(self, X):
         ret = []
         for sentence in X:
-            w2v = np.mean([self.word2vec[w] for w in sentence if w in self.word2vec] 
+            w2v = np.mean([self.word2vec[w] for w in sentence if w in self.word2vec]
                     or [np.zeros(self.dim)], axis=0)
             bow = self.bow.transform([sentence]).toarray()
             ret.append(np.concatenate([w2v, bow[0]]))
@@ -67,8 +67,8 @@ class TfidfHybridVectorizer(object):
         self.word2vec = word2vec
         self.dim = len(word2vec)
         self.tf = tfidf_vectorizer()
-        
-    
+
+
     def fit(self, X, y):
         self.tf.fit(X)
         return self
@@ -76,7 +76,7 @@ class TfidfHybridVectorizer(object):
     def transform(self, X):
         ret = []
         for sentence in X:
-            w2v = np.mean([self.word2vec[w] for w in sentence if w in self.word2vec] 
+            w2v = np.mean([self.word2vec[w] for w in sentence if w in self.word2vec]
                     or [np.zeros(self.dim)], axis=0)
             tf = self.tf.transform([sentence]).toarray()
             ret.append(np.concatenate([w2v, tf[0]]))
@@ -91,15 +91,15 @@ class SequenceHybridVectorizer(object):
         self.word2weight = None
         self.tfidf = tfidf
         self.bow = count_vectorizer()
-        
-    
+
+
     def fit(self, X, y):
         self.bow.fit(X)
         tfidf = tfidf_vectorizer()
         tfidf.fit(X)
         max_idf = max(tfidf.idf_)
         self.word2weight = defaultdict(
-            lambda: max_idf, 
+            lambda: max_idf,
             [(w, tfidf.idf_[i]) for w, i in tfidf.vocabulary_.items()])
         return self
 
@@ -122,7 +122,7 @@ class SequenceHybridVectorizer(object):
             bow = self.bow.transform([sentence]).toarray()
             vector = np.concatenate([vector, bow[0]])
             ret.append(vector)
-        
+
         ret = np.array(ret)
         return ret
 
@@ -164,7 +164,7 @@ def separete_questions(questions):
         X.append(text)
         y.append(question['class'])
     return X, y
-    
+
 # Select what class will be inconsiderate in question classification
 def inconsiderate_classes(c):
     if c == None:
@@ -192,7 +192,7 @@ def predict_answer_type(model, questions):
 ## TESTING ##
 
 def testing(model, X_test, y_test):
-        
+
         result = model.predict(X_test)
         print('Accuracy:', accuracy_score(result, y_test))
         print('F1 Score:', f1_score(result, y_test, average="macro"))
@@ -204,7 +204,7 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
-    
+
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
@@ -225,9 +225,15 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-        
-        
-        
-        
 
+def queryFormulation(questions):
+    for question in questions:
+        question['query'] = make_query(question['question'])
+    return questions
 
+def make_query(question_text):
+    query = ''
+    # Default
+    for word in question_text.split():
+        query += ' text:' + word
+    return query.strip()

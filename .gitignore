@@ -1,5 +1,7 @@
 data/
 data/backup/
+data/documents/indexing/
+data/documents/indexing/*
 data/word_embedding/
 datas/documents/
 data/documents/

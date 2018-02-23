@@ -27,7 +27,7 @@ def questions(treated=False):
         q['category'] = question.attrib['categoria']
         q['type'] = question.attrib['tipo']
         q['class'] = pair_classification(q['category'], q['type'])
-        q['predic_class'] = ''
+        q['predict_class'] = ''
         q['ling'] = question.attrib['ling_orig']
         if u'restrição' in question.attrib:
             q['restriction'] = question.attrib[u'restrição']

@@ -8,10 +8,12 @@ from collections import Counter, defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
+import dill
+import pickle
 import nltk
 
 
-
+answer_type_file = 'data/models/answer_type.sav'
 
 ##### QUESTION CLASSIFICATION #####
 
@@ -142,14 +144,15 @@ def svm_classifier():
 def train_model(X, y, classifier, vectorizer):
     model = Pipeline([("vector_model", vectorizer), ("classifer", classifier)])
     model.fit(X, y)
+    dill.dump(model, open(answer_type_file, 'wb'))
     return model
 
 
 # Remove questions with incosiderate_classes
-def remove_incosiderate_classes(questions):
+def remove_incosiderate_classes(questions, incosiderate_classes=['X', 'MANNER', 'OBJECT', 'OTHER', 'DEFINITION']):
     ret = []
     for question in questions:
-        if not inconsiderate_classes(question['class']):
+        if question['class'] is not None and question['class'] not in incosiderate_classes:
             ret.append(question)
     return ret
 
@@ -196,7 +199,7 @@ def testing(model, X_test, y_test):
         result = model.predict(X_test)
         print('Accuracy:', accuracy_score(result, y_test))
         print('F1 Score:', f1_score(result, y_test, average="macro"))
-        cm = confusion_matrix(result, y_test, labels=['DEFINITION', 'LOCATION', 'MEASURE', 'ORGANIZATION', 'PERSON', 'TIME'])
+        cm = confusion_matrix(result, y_test, labels=['LOCATION', 'MEASURE', 'ORGANIZATION', 'PERSON', 'TIME'])
         return cm
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
@@ -235,5 +238,20 @@ def make_query(question_text):
     query = ''
     # Default
     for word in question_text.split():
-        query += ' text:' + word
+        w = word.replace(',','').replace('.','').replace(';','').replace(':','').replace('(','').replace(')','').replace('?','').replace('!','').strip()
+        if w != '':
+            query += ' text:' + w
     return query.strip()
+
+# Traduz o nome da classe para o modo utilizado no NER (em portugues)
+def classPT(name):
+    if name == 'organization':
+        return 'organizacao'
+    if name == 'time':
+        return 'tempo'
+    if name == 'location':
+        return 'local'
+    if name == 'measure':
+        return 'valor'
+    if name == 'person':
+        return 'pessoa'

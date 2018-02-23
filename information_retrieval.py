@@ -93,9 +93,13 @@ class InformationRetrieval(object):
 
     def retrievalDocuments(self, questions):
         for question in questions:
-            ret = self.solr.query(CORE_NAME, {'q': question['query']})
+            ret = self.solr.query(CORE_NAME, {'q': question['query'], 'rows':str(MAX_DOCUMENTS_RETRIEVAL)})
             aux = []
             for doc in ret.docs:
                 aux.append(doc['id'])
             question['retrieval'] = aux
         return questions
+
+    def documentText(self, doc_id):
+        ret = self.solr.query(CORE_NAME, {'q': 'id:'+doc_id})
+        return ret.docs[0]['text']

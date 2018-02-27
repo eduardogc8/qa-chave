@@ -1,15 +1,17 @@
 
 
 # Retorna as lista de questoes com as respostas candidatas
-def answer_candidates(questions, QP, ir, NER, model_ner):
+def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
     count = 0
-    print('[', end=' ')
+    if loading:
+        print('[', end=' ')
     for question in questions:
-        if count < len(questions) / 10:
-            count += 1
-        else:
-            print('.', end=' ')
-            count = 0
+        if loading:
+            if count < len(questions) / 10:
+                count += 1
+            else:
+                print('.', end=' ')
+                count = 0
         answer_candidates = []
         for doc_id in question['retrieval']:
             doc_text = ir.documentText(doc_id)
@@ -39,7 +41,8 @@ def answer_candidates(questions, QP, ir, NER, model_ner):
                 answer_candidates.append(answer)
                 answer = []
         question['answer_candidates'] = answer_candidates
-    print('. ]')
+    if loading:
+        print('. ]')
     return questions
 
 

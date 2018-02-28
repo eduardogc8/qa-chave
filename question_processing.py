@@ -6,11 +6,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 from collections import Counter, defaultdict
 import matplotlib.pyplot as plt
+from util import util
 import numpy as np
 import itertools
 import dill
 import pickle
 import nltk
+
 
 
 answer_type_file = 'data/models/answer_type.sav'
@@ -190,6 +192,10 @@ def predict_answer_type(model, questions):
         text = text.lower()
         text = nltk.word_tokenize(text)
         question['predict_class'] = model.predict([text])[0]
+        if question['predict_class'] == question['class']:
+            question['correct_answer_type'] = True
+        else:
+            question['correct_answer_type'] = False
     return ret
 
 ## TESTING ##

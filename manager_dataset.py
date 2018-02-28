@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
 import xml.etree.ElementTree as et
+from util import util
 import re
 
 path_questions = "data/questions.xml"
@@ -61,7 +61,7 @@ def treat_questions_text(questions):
     for question in questions:
         if question['question'] is None:
             question['question'] = ''
-        question['question'] = question['question'].replace('\n','').replace('\\', '').replace(u'«', '').replace(u'»', '').replace(u'"', '').replace(u'\"', '').strip()
+        question['question'] = util.treat_text(question['question'])
     return questions
 
 

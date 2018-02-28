@@ -27,7 +27,7 @@ for path in paths_documents:
 					else:
 						doc_text += line.replace('\n',' ')
 				else:
-					if '<DOCNO>' in line: 
+					if '<DOCNO>' in line:
 						doc_id += line.replace('\n', '').replace('<DOCNO>','').replace('</DOCNO>','')
 					if '<TEXT>' in line :
 						in_text = True

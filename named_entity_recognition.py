@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as et
 import sklearn_crfsuite
+from util import util
 import nltk
 import dill
 
@@ -37,7 +38,7 @@ def predict(model, sentenca):
 
 def tokens(in_text):
     if in_text is None: return []
-    return nltk.word_tokenize(in_text)
+    return nltk.word_tokenize(util.treat_text(in_text))
 
 def load_sentences():
     # Documents-> DOC-> EM, ALT->EM, OMITIDO->EM

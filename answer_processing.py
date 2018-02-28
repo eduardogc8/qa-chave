@@ -1,3 +1,4 @@
+import operator
 
 
 # Retorna as lista de questoes com as respostas candidatas
@@ -48,22 +49,50 @@ def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
 
 # Define a resposta final
 def finals_answer(questions):
+
     for question in questions:
+        question['final_answer'] = 'N/A'
+
+        # Primeiro candidato
+        '''
         if len(question['answer_candidates']) > 0:
             aux = question['answer_candidates'][0]
             answer = ''
             for w in aux:
                 answer += ' ' + w[0]
             question['final_answer'] = answer.strip()
-        else:
-            question['final_answer'] = 'N/A'
+        '''
+
+        # Mais votado
+        votes = {}
+        for candidate in question['answer_candidates']:
+            answer = ''
+            for w in candidate:
+                answer += ' ' + w[0]
+            answer = answer.strip()
+
+            if answer.lower() not in question['question'].lower():
+                if answer not in votes:
+                    votes[answer] = 0
+                votes[answer] += 1
+        if len(votes) > 0:
+            question['final_answer'] = max(votes.items(), key=operator.itemgetter(1))[0]
+
     return questions
 
 
 def test_answer_candidates(questions):
     total = len(questions)
     right = 0
+    rc_total = 0  # Total of question with correct answer classifier
+    rc_right = 0
+
     for question in questions:
+        aux = False
+        question['correct_answers_candidates'] = False
+        if question['correct_answer_type']:
+            rc_total += 1
+            aux = True
         for answer in question['answers']:
             stop = False
             for candid in question['answer_candidates']:
@@ -75,9 +104,14 @@ def test_answer_candidates(questions):
                     a1 = answer['answer'].lower().replace(',', '').replace('.', '').replace(';', '').strip()
                     a2 = candidate.lower().replace(',', '').replace('.', '').replace(';', '').strip()
                     if a1 in a2 or a2 in a1:
+                        question['correct_answers_candidates'] = True
                         right += 1
                         stop = True
+                        if aux:
+                            rc_right += 1
                         break
             if stop: break
     print(str(total) + ' / ' + str(right))
-    print('Accuracy: '+ '%.3f' % ((right/total)*100)+' %')
+    print('Total recall: '+ '%.3f' % ((right/total)*100)+' %')
+    print('\nCorrect answer type:\n' + str(rc_total) + ' / ' + str(rc_right))
+    print('Recall: '+ '%.3f' % ((rc_right/rc_total)*100)+' %')

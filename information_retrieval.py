@@ -1,6 +1,7 @@
 
 from SolrClient import SolrClient, IndexQ
 import xml.etree.ElementTree as ET
+from util import util
 import glob
 import os
 import io
@@ -68,6 +69,7 @@ class InformationRetrieval(object):
             for line in lines:
                 document_id = line[:line.index('|')]
                 document_text = line[line.index('|')+1:]
+                document_text = util.treat_text(document_text)
                 docs.append({'id': document_id, 'text': document_text})
                 if len(docs) >= 1000:
                     self.solr.index(CORE_NAME, docs)

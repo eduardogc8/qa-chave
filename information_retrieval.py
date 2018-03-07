@@ -82,6 +82,8 @@ class InformationRetrieval(object):
                 print(str(len(lines))+'/'+str(lines.index(line)))
         print('End')
 
+
+
     def remove_all_documents(self):
         # <delete><query>*:*</query></delete>
         self.solr.delete_doc_by_query(CORE_NAME, '*:*')

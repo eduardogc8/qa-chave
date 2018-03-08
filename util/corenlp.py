@@ -8,13 +8,36 @@ IP = 'localhost'
 PORT = 9000
 
 
-def call(text, annotators, tokenizeWhitespace='false', outputFormat='xml'):
-    properties = {'tokenize.whitespace': tokenizeWhitespace,
+def ssplit(text):
+    """Dado um texto de entrada, eh retornado a lista de sentencas."""
+    passages = []
+    output = call(text, 'ssplit', outputFormat='text')
+    control = False
+    for line in output.split('\r\n'):
+        if control:
+            passages.append(line)
+            control = False
+        elif 'Sentence #' in line:
+            control = True
+    return passages
+
+
+def call(text, annotators, outputFormat='xml'):
+    """
+    Realiza uma chamada no servidor CoreNLP (o servidor deve estar ligado).
+
+    Ligar servidor. Ir na pasta do CorneNLP e executar o seguinte comando na cmd:
+    "java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer".
+    text eh o input em string.
+    annotators define os as funcoes a serem executadas em textself.
+        exemplo: annotators='tokenize,ssplit,pos,depparse'
+    outputFormat eh o formato de saida (conllu, json, xml, text).
+    """
+    properties = {'tokenize.whitespace': 'false',
                   'annotators': annotators,
                   'depparse.model': DEP_MODEL_PATH,
                   'pos.model': POS_MODEL_PATH,
-                  'outputFormat': outputFormat  # conllu, json, xml, text
-                 }
+                  'outputFormat': outputFormat}  # conllu, json, xml, text
 
     properties_val = json.dumps(properties)
 

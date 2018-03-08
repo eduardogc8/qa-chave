@@ -2,6 +2,9 @@ import operator
 from util import util
 
 
+ANSWER_CANDIDATES_PARAMETERS_WEIGHT = {'doc_rank': -1, 'votes': 0.7, 'distance': -0.5, 'qw_in_passage': 1}
+
+
 def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
     """Define para a lista de questoes suas respostas candidatas."""
     count = 0
@@ -17,28 +20,24 @@ def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
                 count = 0
 
         question['answer_candidates'] = []  # Lista de respostas candidatas da question
-        for doc_id in question['retrieval']:  # Para cada documento recuperado
+        for passage in question['passages']:  # Para cada passagem recuperado
 
-            doc_text = ir.documentText(doc_id)
-            doc_entities = NER.predict(model_ner, doc_text)[0]
-
-            candidate = {'document_text': doc_text, 'words': [], 'full_answer': '', 'votes': 0}
-            #            answer doc text retrieval, [(word, index)], 'w0 w1 w2 wn', num candiates with same answer
+            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
+            #                         answer passage text, [(word, index)], 'w0 w1 w2 wn', num candiates with same answer
 
             last = False
-            text_entities = zip(doc_text.split(), doc_entities)
-            aux_list = list(text_entities)
-            for index in range(len(aux_list)):
-                word = util.replace_ponctutation(aux_list[index][0])
-                entity = aux_list[index][1]
+            words = passage['passage'].split()
+            for index in range(len(words)):
+                word = util.replace_ponctutation(words[index])
+                entity = passage['entitys'][index]
 
                 if '-' in entity:  # Se eh uma entidade mencionada
                     class_entity = entity[:entity.index('-')].lower()
                     suffix = entity[entity.index('-') + 1:].lower()
                     if suffix == 'b':  # Inicio da entidade mencionada
                         if not candidate['full_answer'] == '':
-                            insert_candidate(question['answer_candidates'], candidate)
-                            candidate = {'document_text': doc_text, 'words': [], 'full_answer': '', 'votes': 0}
+                            insert_candidate(question, candidate)
+                            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
                     if class_entity == QP.classPT(question['predict_class'].lower()):
                         candidate['words'].append((word, index))
                         candidate['full_answer'] += ' ' + word
@@ -49,70 +48,106 @@ def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
                 else:
                     if last:
                         if not candidate['full_answer'] == '':
-                            insert_candidate(question['answer_candidates'], candidate)
-                            candidate = {'document_text': doc_text, 'words': [], 'full_answer': '', 'votes': 0}
+                            insert_candidate(question, candidate)
+                            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
                     last = False
             if not candidate['full_answer'] == '':
-                insert_candidate(question['answer_candidates'], candidate)
-                candidate = {'document_text': doc_text, 'words': [], 'full_answer': '', 'votes': 0}
+                insert_candidate(question, candidate)
+                candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
     if loading:
         print('. ]')
     return questions
 
 
-def insert_candidate(candidates, candidate):
+def insert_candidate(question, candidate):
     """
-    Funcao auxiliar para inserir o candidate na lista candidates.
+    Funcao auxiliar para inserir o candidate na lista candidates da question.
 
     Cada candidate com a mesma full answer ira receber +1 vote, inclusive a propria candidate.
+    Tambem eh calculado a distance entre as principais palavras da pergunta e a passage_text
     """
-    candidates.append(candidate)
-    for cand in candidates:
+    question['answer_candidates'].append(candidate)
+    for cand in question['answer_candidates']:  # Update votes
         if cand['full_answer'] == candidate['full_answer']:
             cand['votes'] += 1
+    candidate_distance(question, candidate)
+
+
+def candidate_distance(question, candidate):
+    """
+    Determina a distancia entre as principais palavras da pergunta e a resposta na passagem.
+
+    Tambem determina o numero de palavras principais que estao no texto da passagem.
+    """
+    candidate['qw_in_passage'] = 0
+    candidate['distance'] = 0
+
+    count_qw = 0
+    for qw in util.replace_ponctutation(question['question']).lower().split():
+        if util.is_stopword(qw):  # Stopwords da questao sao desconsideradas
+            continue
+        else:
+            ret = util.shortSentenceDistance(util.replace_ponctutation(candidate['passage_text']), qw, candidate['full_answer'])
+            count_qw += 1
+            if ret == -2:  # Caso a resposta nao esteja na passage eh sinal de algum problema no sistema
+                print('Warning: No answer in candidate passage')
+            else:
+                if not ret == -1:  # Question word not in passage text
+                    candidate['qw_in_passage'] += 1
+                    candidate['distance'] += ret
+                count_qw += 1
+
+    if candidate['qw_in_passage'] > 0:
+        candidate['distance'] = candidate['distance'] / candidate['qw_in_passage']
+    if count_qw > 0:
+        candidate['qw_in_passage'] = candidate['qw_in_passage'] / count_qw
+
+
+def normalize_parameters(answer_candidates):
+    """Normalizar parametros de cada candidato."""
+    aux_dic = {}
+    for parameter in ANSWER_CANDIDATES_PARAMETERS_WEIGHT:
+        aux_dic[parameter] = [float('inf'), float('inf')*-1]  # [min, max]
+        for candidate in answer_candidates:
+            if candidate[parameter] < aux_dic[parameter][0]:
+                aux_dic[parameter][0] = candidate[parameter]
+            if candidate[parameter] > aux_dic[parameter][1]:
+                aux_dic[parameter][1] = candidate[parameter]
+
+    for candidate in answer_candidates:
+        for parameter in ANSWER_CANDIDATES_PARAMETERS_WEIGHT:
+            if aux_dic[parameter][1] - aux_dic[parameter][0] == 0:
+                candidate[parameter] = 0
+                continue
+            candidate[parameter] = (candidate[parameter] - aux_dic[parameter][0]) / (aux_dic[parameter][1] - aux_dic[parameter][0])
 
 
 def finals_answer(questions):
     """Define a resposta final."""
+    interval_print = 0
+    print('[', end=' ')
+
     for question in questions:
-        print(str(len(questions))+'/'+str(questions.index(question)))
+        if interval_print < len(questions) / 10:
+            interval_print += 1
+        else:
+            print('.', end=' ')
+            interval_print = 0
         question['final_answer'] = 'N/A'
 
-        # Primeiro candidato
-        '''
+        # Normalize os parametros de cada candidate
+        normalize_parameters(question['answer_candidates'])
+
+        # Determinar o score de cada answer candidate
+        for candidate in question['answer_candidates']:
+            candidate['score'] = 0
+            for parameter in ANSWER_CANDIDATES_PARAMETERS_WEIGHT:
+                candidate['score'] += candidate[parameter] * ANSWER_CANDIDATES_PARAMETERS_WEIGHT[parameter]
+
         if len(question['answer_candidates']) > 0:
-            aux = question['answer_candidates'][0]
-            answer = ''
-            for w in aux:
-                answer += ' ' + w[0]
-            question['final_answer'] = answer.strip()
-        '''
+            question['final_answer'] = sorted(question['answer_candidates'], key=lambda k: k['score'])[-1]['full_answer']
 
-        # Mais votado
-        '''
-        votes = {}
-        for candidate in question['answer_candidates']:
-            if candidate['full_answer'].lower() not in question['question'].lower():
-                if candidate['full_answer'] not in votes:
-                    votes[candidate['full_answer']] = candidate['votes']
-        if len(votes) > 0:
-            question['final_answer'] = max(votes.items(), key=operator.itemgetter(1))[0]
-        '''
-
-        # Menor distancia
-        for candidate in question['answer_candidates']:
-            candidate['distance'] = 0
-            for qw in util.replace_ponctutation(question['question']).lower().split():
-                if util.is_stopword(qw):
-                    continue
-                else:
-                    ret = util.shortSentenceDistance(candidate['document_text'], qw, candidate['full_answer'])
-                    if ret is None:
-                        ret = 30
-                    candidate['distance'] += ret
-            if candidate['distance'] == 0:
-                candidate['distance'] = 200
-        question['final_answer'] = sorted(question['answer_candidates'], key=lambda k: k['distance'])[0]['full_answer']
+    print('. ]')
     return questions
 
 

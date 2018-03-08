@@ -1,7 +1,10 @@
 
 from SolrClient import SolrClient, IndexQ
 import xml.etree.ElementTree as ET
+import question_processing as QP
 from util import util
+from util import corenlp as CNLP
+import named_entity_recognition as NER
 import glob
 import os
 import io
@@ -97,7 +100,7 @@ class InformationRetrieval(object):
 
     def retrievalDocuments(self, questions):
         for question in questions:
-            ret = self.solr.query(CORE_NAME, {'q': question['query'], 'rows':str(MAX_DOCUMENTS_RETRIEVAL)})
+            ret = self.solr.query(CORE_NAME, {'q': question['query'], 'rows': str(MAX_DOCUMENTS_RETRIEVAL), 'fl': 'id'})
             aux = []
             for doc in ret.docs:
                 aux.append(doc['id'])
@@ -107,3 +110,55 @@ class InformationRetrieval(object):
     def documentText(self, doc_id):
         ret = self.solr.query(CORE_NAME, {'q': 'id:'+doc_id})
         return ret.docs[0]['text']
+
+
+def retrievalPassages(document_text, ner_model, answer_type=None):
+    """
+    Retorna as passagens dos documentos e as entidades mencionadas.
+
+    retorna [(passage, entitys, sequence)]
+    passage: string
+    entitys: ['O', 'CLASS-B', ...]
+    sequence: int. Caso seja fitrada as sentencas por classe, o numero da sequencia
+    sera mantido pela lista original. Exemplo com filtro: 1, 2, 5, 7.
+    """
+    allPassages = CNLP.ssplit(document_text)
+    passages = []
+    if answer_type is None or ner_model is None:
+        count = 1
+        for passage in allPassages:
+            entitys = NER.predict(ner_model, passage)[0]
+            passages.append((passage, entitys, count))
+            count += 1
+        return passages
+
+    count = 1
+    for passage in allPassages:
+        entitys = NER.predict(ner_model, passage)[0]
+        control = False  # Se a passage contem ao menos um entidade mencionada de classe igual ao tipo de resposta
+        for entity in entitys:
+            if '-' in entity:  # Se eh uma entidade mencionada
+                class_entity = entity[:entity.index('-')].lower()
+                if class_entity == QP.classPT(answer_type.lower()):
+                    control = True
+                    break
+        if control:
+            passages.append((passage, entitys, count))
+        count += 1
+    return passages
+
+
+def retrievalPassagesQuestions(questions, ner_model, ir):
+    for question in questions:
+        question['passages'] = []
+        rank = 1
+        for doc_id in question['retrieval']:
+            text = ir.documentText(doc_id)
+            passages = retrievalPassages(text, ner_model, question['predict_class'])
+            for passage in passages:
+                question['passages'].append({
+                    'passage': passage[0], 'entitys': passage[1], 'sequence': passage[2], 'doc_id': doc_id, 'doc_rank': rank
+                    })
+            rank += 1
+
+    return questions

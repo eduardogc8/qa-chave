@@ -43,6 +43,8 @@ def questions(treated=False):
             if e.tag == 'texto':
                 q['question'] = e.text
             if e.tag == 'resposta':
+                if e.text is None or util.treat_text(e.text) == '':
+                    continue
                 ans = {'answer':e.text, 'n':e.attrib['n'], 'doc':e.attrib['docid']}
                 ans['doc'] = validate_docid(ans['doc'])
                 q['answers'].append(ans)

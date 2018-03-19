@@ -14,7 +14,6 @@ import pickle
 import nltk
 
 
-
 answer_type_file = 'data/models/answer_type.sav'
 
 ##### QUESTION CLASSIFICATION #####
@@ -131,10 +130,6 @@ class SequenceHybridVectorizer(object):
         return ret
 
 
-# Set question class
-def question_classification(question):
-    pass
-
 
 # Setting SVM classifier
 def svm_classifier():
@@ -242,22 +237,46 @@ def queryFormulation(questions):
 
 def make_query(question_text):
     query = ''
+
     # Default
     for word in question_text.split():
-        w = word.replace(',','').replace('.','').replace(';','').replace(':','').replace('(','').replace(')','').replace('?','').replace('!','').strip()
+        w = util.replace_ponctutation(word)
         if w != '':
             query += ' text:' + w
+
+    """
+    # Keywords and distances Old
+    keywords = ""
+    distance = 5
+    for word in question_text.split():
+        w = util.replace_ponctutation(word).lower()
+        if w != '' and not util.is_stopword(w):
+            keywords += w + ' '
+    keywords = keywords.strip()
+    query = "text:\"" + keywords + "\"~" + str(distance)
+    """
+    """
+    # Keywords and distances New
+    distance = '20'
+    words = ''
+    for word in question_text.split():
+        w = util.replace_ponctutation(word).lower()
+        if w != '' and not util.is_stopword(w):
+            words += ' ' + w
+    query = "text:(\"" + words.strip() + "\"~" + distance + ' ' + words.strip() + ')'
+    """
     return query.strip()
 
 # Traduz o nome da classe para o modo utilizado no NER (em portugues)
-def classPT(name):
+def classPT(name_class):
+    name = name_class.lower()
     if name == 'organization':
-        return 'organizacao'
+        return 'ORGANIZACAO'
     if name == 'time':
-        return 'tempo'
+        return 'TEMPO'
     if name == 'location':
-        return 'local'
+        return 'LOCAL'
     if name == 'measure':
-        return 'valor'
+        return 'VALOR'
     if name == 'person':
-        return 'pessoa'
+        return 'PESSOA'

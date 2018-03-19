@@ -1,11 +1,12 @@
 import operator
 from util import util
+import question_processing as QP
 
 
-ANSWER_CANDIDATES_PARAMETERS_WEIGHT = {'doc_rank': -1, 'votes': 0.7, 'distance': -0.5, 'qw_in_passage': 1}
+ANSWER_CANDIDATES_PARAMETERS_WEIGHT = {'doc_rank': -0.9, 'votes': 0.7}
 
 
-def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
+def answer_candidates(questions, ir, model_ner, answer_type_filter=False, loading=True):
     """Define para a lista de questoes suas respostas candidatas."""
     count = 0
     if loading:
@@ -21,6 +22,17 @@ def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
 
         question['answer_candidates'] = []  # Lista de respostas candidatas da question
         for passage in question['passages']:  # Para cada passagem recuperado
+
+            if answer_type_filter:
+                control = False
+                for entity in passage['entitys']:
+                    if '-' in entity:  # Se eh uma entidade mencionada
+                        class_entity = entity[:entity.index('-')].lower()
+                        if class_entity == QP.classPT(question['predict_class'].lower()).lower():
+                            control = True
+                            break
+                if not control:
+                    continue
 
             candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
             #                         answer passage text, [(word, index)], 'w0 w1 w2 wn', num candiates with same answer
@@ -38,7 +50,7 @@ def answer_candidates(questions, QP, ir, NER, model_ner, loading=True):
                         if not candidate['full_answer'] == '':
                             insert_candidate(question, candidate)
                             candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
-                    if class_entity == QP.classPT(question['predict_class'].lower()):
+                    if class_entity == QP.classPT(question['predict_class'].lower()).lower():
                         candidate['words'].append((word, index))
                         candidate['full_answer'] += ' ' + word
                         candidate['full_answer'] = candidate['full_answer'].strip()
@@ -70,7 +82,7 @@ def insert_candidate(question, candidate):
     for cand in question['answer_candidates']:  # Update votes
         if cand['full_answer'] == candidate['full_answer']:
             cand['votes'] += 1
-    candidate_distance(question, candidate)
+    #candidate_distance(question, candidate)
 
 
 def candidate_distance(question, candidate):
@@ -141,6 +153,8 @@ def finals_answer(questions):
         # Determinar o score de cada answer candidate
         for candidate in question['answer_candidates']:
             candidate['score'] = 0
+            if util.remove_acentts(candidate['full_answer'].lower()) in util.remove_acentts(question['question'].lower()):
+                continue
             for parameter in ANSWER_CANDIDATES_PARAMETERS_WEIGHT:
                 candidate['score'] += candidate[parameter] * ANSWER_CANDIDATES_PARAMETERS_WEIGHT[parameter]
 
@@ -172,7 +186,7 @@ def qaDistanceText(textWords, qWords, answer):
 
 
 def test_answer_candidates(questions):
-    """Print o recall geral dos candidates e o recall para as question com answer_type corretas."""
+    """Print o result geral dos candidates e o result para as question com answer_type corretas."""
     total = len(questions)
     right = 0
     cc_total = 0  # Total of question with correct answer classifier
@@ -181,25 +195,45 @@ def test_answer_candidates(questions):
     for question in questions:
         aux = False
         question['correct_answers_candidates'] = False
+
         if question['correct_answer_type']:
             cc_total += 1
             aux = True
+
+        aux2 = False
         for answer in question['answers']:
+            if answer['answer'] is None or answer['answer'] == '':
+                continue
             stop = False
+            aux2 = True
             for candidate in question['answer_candidates']:
-                if answer['answer'] is not None:
-                    a1 = util.replace_ponctutation(answer['answer'].lower())
-                    a2 = util.replace_ponctutation(candidate['full_answer'].lower())
-                    if a1 in a2 or a2 in a1:
-                        question['correct_answers_candidates'] = True
-                        right += 1
-                        stop = True
-                        if aux:
-                            cc_right += 1
-                        break
+                correct_answer = util.replace_ponctutation(answer['answer'].lower())
+                system_answer = util.replace_ponctutation(candidate['full_answer'].lower())
+                if correct_answer in system_answer or system_answer in correct_answer:
+                    question['correct_answers_candidates'] = True
+                    right += 1
+                    stop = True
+                    if aux:
+                        cc_right += 1
+                    break
             if stop:
                 break
+        if aux and not aux2:
+            cc_total -= 1
     print(str(total) + ' / ' + str(right))
-    print('Total recall: ' + '%.3f' % ((right/total)*100)+' %')
+    print('Result: ' + '%.3f' % ((right/total)*100)+' %')
     print('\nCorrect answer type:\n' + str(cc_total) + ' / ' + str(cc_right))
-    print('Recall: ' + '%.3f' % ((cc_right/cc_total)*100)+' %')
+    print('Result: ' + '%.3f' % ((cc_right/cc_total)*100)+' %')
+
+
+def evaluate_questions(questions):
+    """Verifica se a resposta final gerada pelo sistema esta correta."""
+    for question in questions:
+        question['correct_final_answer'] = False
+        for answer in question['answers']:
+            if answer is None or answer['answer'] is None:
+                continue
+            correct_answer = util.replace_ponctutation(answer['answer'].lower())
+            system_answer = util.replace_ponctutation(question['final_answer'].lower())
+            if correct_answer in system_answer or system_answer in correct_answer:
+                question['correct_final_answer'] = True

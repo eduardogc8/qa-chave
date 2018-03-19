@@ -3,7 +3,8 @@ import io
 
 
 CHARACTERS_REPLACE = [('\n',''), ('\\', ''), (u'«', ''), (u'»', ''), (u'"', ''), (u'\"', '')]
-PONCTUATION_REPLACE = [('.', ''), (',', ''), (';', ''), (':', ''), ('(', ''), (')', ''), ('[', ''), (']', ''), ('{', ''), ('}', ''), ('?', ''), ('!', '')]
+PONCTUATION_REPLACE = [(';', ''), (':', ''), ('(', ''), (')', ''), ('[', ''), (']', ''), ('{', ''), ('}', ''), ('?', ''), ('!', '')]
+NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 PATH_STOPWORDS = 'data/util/stopwords_pt.txt'
 
@@ -19,8 +20,8 @@ def represents_int(s):
 
 #Remove o acento das palavras
 def remove_acentts(txt):
-    if type(txt) is str:
-        txt = unicode(txt, 'utf-8')
+    #if type(txt) is str:
+    #    txt = unicode(txt, 'utf-8')
     return normalize('NFKD', txt).encode('ASCII', 'ignore').decode('ASCII')
 
 
@@ -37,6 +38,16 @@ def treat_text(text):
 def replace_ponctutation(text):
     for replace in PONCTUATION_REPLACE:
         text = text.replace(replace[0], replace[1])
+    if ',' in text or '.' in text:
+        new_text = ''
+        for i in range(len(text)):
+            c = text[i]
+            if c == ',' or c == '.':
+                if i > 0 and text[i-1] in NUMBERS and i < len(text)-1 and text[i+1] in NUMBERS:
+                    new_text += c
+            else:
+                new_text += c
+        text = new_text
     text = text.strip()
     return text
 
@@ -45,7 +56,7 @@ def is_stopword(word):
     f = io.open(PATH_STOPWORDS, 'r', encoding='utf-8')
     lines = f.readlines()
     for line in lines:
-        if word.lower() == line:
+        if word.lower() == treat_text(line).lower(*):
             return True
     return False
 

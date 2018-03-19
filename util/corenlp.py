@@ -1,11 +1,24 @@
+import os
 import json
 import urllib
+import socket
 import requests
 
 DEP_MODEL_PATH = 'models/pt-model/dep-parser'  # Relativo a pasta do servidor
 POS_MODEL_PATH = 'models/pt-model/pos-tagger.dat'  # Relativo a pasta do servidor
+PATH_SYSTEM = 'c://corenlp/'
 IP = 'localhost'
 PORT = 9000
+
+
+# Return True when server is online
+def server_status():
+    """Check server status."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((IP, PORT))
+    if not result == 0:
+        return False
+    return True
 
 
 def ssplit(text):
@@ -45,13 +58,14 @@ def call(text, annotators, outputFormat='xml'):
     encoded_params = urllib.parse.urlencode(params)
     url = 'http://{ip}:{port}/?{params}'.format(ip=IP, port=PORT,
                                                 params=encoded_params)
-
     headers = {'Content-Type': 'text/plain;charset=utf-8'}
+
+    if not server_status():
+        # Conectar
+        os.system("start java -mx4g -cp " + PATH_SYSTEM + "\"*\"  edu.stanford.nlp.pipeline.StanfordCoreNLPServer")
     response = requests.post(url, text.encode('utf-8'), headers=headers)
     response.encoding = 'utf-8'
-
     output = response.text.replace('\0', '')
-
     return output
 
 

@@ -1,4 +1,6 @@
 data/
+data/solr/
+data/solr/*
 data/backup/
 data/models/
 data/models/*

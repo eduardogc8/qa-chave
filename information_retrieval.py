@@ -5,27 +5,38 @@ import question_processing as QP
 from util import util
 from util import corenlp as CNLP
 import named_entity_recognition as NER
+import numpy as np
+import socket
 import glob
 import os
 import io
 
 
 CORE_NAME = 'Chave'
-PATH_SYSTEM = 'c://solr-7.2.1/'
+PATH_SYSTEM = 'data/solr/'
 PATH_DOCUMENTS = 'data/documents/indexing/'
 VERSION = '0'
 MAX_DOCUMENTS_RETRIEVAL = 10
+IP = 'localhost'
+PORT = 8983
 
 
 class InformationRetrieval(object):
 
     def __init__(self):
+        """Contructor."""
         self.solr = None
 
     def start(self, reset=False):
+        """
+        Start IR server.
+
+        When reset is true, all documents is removed and indexed again.
+        If IR system has no documents indexed, then the documents will be indexed.
+        """
         if not self.server_status():
-            os.system(PATH_SYSTEM + 'bin/solr.cmd start')
-        self.solr = SolrClient('http://localhost:8983/solr')
+            os.system(PATH_SYSTEM + 'start bin/solr.cmd start -p '+str(PORT))
+        self.solr = SolrClient('http://localhost:'+str(PORT)+'/solr')
 
         if reset:
             self.remove_all_documents()
@@ -35,35 +46,22 @@ class InformationRetrieval(object):
             self.index_documents()
 
     def stop(self):
+        """Stop IR server."""
         if self.server_status():
             os.system(PATH_SYSTEM + 'bin/solr.cmd stop -all')
 
     # Return True when server is online
     def server_status(self):
-        ret = os.popen(PATH_SYSTEM + 'bin/solr.cmd status').read()
-        if not 'No running Solr nodes found.' == ret.strip():
-            return True
-        return False
+        """Check server status."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex((IP, PORT))
+        if not result == 0:
+            return False
+        return True
 
     def index_documents(self):
+        """Index documents."""
         print('Indexing:')
-        '''
-        for file_name in glob.glob(PATH_DOCUMENTS + "*.txt"):
-            f = io.open(file_name, 'r', encoding='utf-8')
-            lines = f.readlines()
-            print('File: '+str(len(lines))+' lines: ')
-            index = IndexQ('data/documents/', 'indexq', size=len(lines))
-            count = 1
-            for line in lines:
-                count += 1
-                document_id = line[:line.index('|')]
-                document_text = line[line.index('|')+1:]
-                index.add({'id': document_id, 'text': document_text})
-            print('End')
-            index.add(finalize=True)
-            index.index(self.solr, CORE_NAME)
-            self.solr.commit(CORE_NAME, openSearcher=True)
-        '''
         for file_name in glob.glob(PATH_DOCUMENTS + "*.txt"):
             f = io.open(file_name, 'r', encoding='utf-8')
             lines = f.readlines()
@@ -82,39 +80,85 @@ class InformationRetrieval(object):
             if len(docs) > 0:
                 self.solr.index(CORE_NAME, docs)
                 self.solr.commit(CORE_NAME, openSearcher=True)
-                print(str(len(lines))+'/'+str(lines.index(line)))
         print('End')
 
-
-
     def remove_all_documents(self):
+        """Remove all documents from IR system."""
         # <delete><query>*:*</query></delete>
         self.solr.delete_doc_by_query(CORE_NAME, '*:*')
         self.solr.commit(CORE_NAME, openSearcher=True)
 
     def has_documents(self):
+        """Check if the IR system has one or more documents indexed."""
         res = self.solr.query(CORE_NAME, {'q': '*:*'})
         if res.get_results_count() > 0:
             return True
         return False
 
     def retrievalDocuments(self, questions):
+        """For each question is retrieval the docid."""
+        count = 0
+        print('[', end=' ')
         for question in questions:
+            if count < len(questions) / 10:
+                count += 1
+            else:
+                print('.', end=' ')
+                count = 0
+
             ret = self.solr.query(CORE_NAME, {'q': question['query'], 'rows': str(MAX_DOCUMENTS_RETRIEVAL), 'fl': 'id'})
             aux = []
             for doc in ret.docs:
                 aux.append(doc['id'])
             question['retrieval'] = aux
+        print('. ]')
         return questions
 
     def documentText(self, doc_id):
+        """Return documentText fo a input ID Doc."""
         ret = self.solr.query(CORE_NAME, {'q': 'id:'+doc_id})
         return ret.docs[0]['text']
 
 
+def test_ir_system(questions):
+    """Print precision, recall and f-score."""
+    precisions = []
+    recalls = []
+    f_scores = []
+    for question in questions:
+        relevants = []
+        for answer in question['answers']:
+            if answer['doc'] is not None and len(answer['doc']) > 0:
+                relevants.append(answer['doc'].strip())
+        total_relevants = len(relevants)
+        if total_relevants == 0:
+            continue
+        relevants_retrieval = 0
+        for retrieval in question['retrieval']:
+            if retrieval.strip() in relevants:
+                relevants_retrieval += 1
+        if len(question['retrieval']) == 0:
+               # print(question['query'])
+                precision = 0
+        else:
+            precision = relevants_retrieval / len(question['retrieval'])
+        precisions.append(precision)
+        recall = relevants_retrieval / total_relevants
+        recalls.append(recall)
+        if (precision + recall) == 0:
+            f_score = 0
+        else:
+            f_score = 2 * ((precision * recall) / (precision + recall))
+        f_scores.append(f_score)
+
+    print('Precision: '+str(np.mean(precisions)))
+    print('Recall: '+str(np.mean(recalls)))
+    print('F-Score: '+str(np.mean(f_scores)))
+
+
 def retrievalPassages(document_text, ner_model, answer_type=None):
     """
-    Retorna as passagens dos documentos e as entidades mencionadas.
+    Retorna as passagens dos documentos que tenha ao menos uma entidade desejada e as entidades mencionadas.
 
     retorna [(passage, entitys, sequence)]
     passage: string
@@ -139,7 +183,7 @@ def retrievalPassages(document_text, ner_model, answer_type=None):
         for entity in entitys:
             if '-' in entity:  # Se eh uma entidade mencionada
                 class_entity = entity[:entity.index('-')].lower()
-                if class_entity == QP.classPT(answer_type.lower()):
+                if class_entity == QP.classPT(answer_type.lower()).lower():
                     control = True
                     break
         if control:
@@ -148,17 +192,29 @@ def retrievalPassages(document_text, ner_model, answer_type=None):
     return passages
 
 
-def retrievalPassagesQuestions(questions, ner_model, ir):
+def retrievalPassagesQuestions(questions, ner_model, ir, answer_type=True):
+    """Para cada question in questions eh recuperado as passagens que tenha ao menos uma entidade de mesma predict_class."""
+    count = 0
+    print('[', end=' ')
     for question in questions:
+        if count < len(questions) / 10:
+            count += 1
+        else:
+            print('.', end=' ')
+            count = 0
+
         question['passages'] = []
         rank = 1
         for doc_id in question['retrieval']:
             text = ir.documentText(doc_id)
-            passages = retrievalPassages(text, ner_model, question['predict_class'])
+            if answer_type:
+                passages = retrievalPassages(text, ner_model, question['predict_class'])
+            else:
+                passages = retrievalPassages(text, ner_model)
             for passage in passages:
                 question['passages'].append({
                     'passage': passage[0], 'entitys': passage[1], 'sequence': passage[2], 'doc_id': doc_id, 'doc_rank': rank
                     })
             rank += 1
-
+    print('. ]')
     return questions

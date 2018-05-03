@@ -2,7 +2,7 @@ from unicodedata import normalize
 import io
 
 
-CHARACTERS_REPLACE = [('\n',''), ('\\', ''), (u'«', ''), (u'»', ''), (u'"', ''), (u'\"', '')]
+CHARACTERS_REPLACE = [('\n',''), ('\\', ''), (u'«', "\""), (u'»', "\""), (u"'", "\"")]
 PONCTUATION_REPLACE = [(';', ''), (':', ''), ('(', ''), (')', ''), ('[', ''), (']', ''), ('{', ''), ('}', ''), ('?', ''), ('!', '')]
 NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -56,7 +56,7 @@ def is_stopword(word):
     f = io.open(PATH_STOPWORDS, 'r', encoding='utf-8')
     lines = f.readlines()
     for line in lines:
-        if word.lower() == treat_text(line).lower(*):
+        if word.lower() == treat_text(line).lower():
             return True
     return False
 

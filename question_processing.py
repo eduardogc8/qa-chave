@@ -15,6 +15,7 @@ import nltk
 
 
 answer_type_file = 'data/models/answer_type.sav'
+MAX_DOCUMENTS_RETRIEVAL = 10
 
 ##### QUESTION CLASSIFICATION #####
 
@@ -236,14 +237,17 @@ def queryFormulation(questions):
     return questions
 
 def make_query(question_text):
-    query = ''
+    query = {'fl': 'id', 'rows': str(MAX_DOCUMENTS_RETRIEVAL)}
+    q = ''
 
+    """
     # Default
     for word in question_text.split():
         w = util.replace_ponctutation(word)
         if w != '':
-            query += ' text:' + w
-
+            q += ' text:' + w
+    query['q'] = q
+    """
     """
     # Keywords and distances Old
     keywords = ""
@@ -265,7 +269,23 @@ def make_query(question_text):
             words += ' ' + w
     query = "text:(\"" + words.strip() + "\"~" + distance + ' ' + words.strip() + ')'
     """
-    return query.strip()
+    # Distance between terms with edismax
+    words = ''
+    for word in question_text.split():
+        w = util.replace_ponctutation(word).lower()
+        if w != '' and not util.is_stopword(w):
+            words += ' ' + w
+    query['q'] = words.strip()
+    query['defType'] = 'edismax'
+    query['qf'] = 'text'
+    query['pf'] = 'text'
+    query['ps'] = '15'
+    query['pf2'] = 'text'
+    query['ps2'] = '15'
+    query['pf3'] = 'text'
+    query['ps3'] = '15'
+
+    return query
 
 # Traduz o nome da classe para o modo utilizado no NER (em portugues)
 def classPT(name_class):

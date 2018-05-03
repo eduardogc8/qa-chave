@@ -4,8 +4,9 @@ import urllib
 import socket
 import requests
 
-DEP_MODEL_PATH = 'models/pt-model/dep-parser'  # Relativo a pasta do servidor
-POS_MODEL_PATH = 'models/pt-model/pos-tagger.dat'  # Relativo a pasta do servidor
+DEP_MODEL_PATH = 'c://corenlp/models/pt-model/dep-parser'  # Relativo a pasta do servidor
+POS_MODEL_PATH = 'c://corenlp/models/pt-model/pos-tagger.dat'  # Relativo a pasta do servidor
+NER_MODEL_PATH = 'c://corenlp/models/pt-model/ner_model.ser.gz'  # Relativo a pasta do servidor
 PATH_SYSTEM = 'c://corenlp/'
 IP = 'localhost'
 PORT = 9000
@@ -50,6 +51,7 @@ def call(text, annotators, outputFormat='xml'):
                   'annotators': annotators,
                   'depparse.model': DEP_MODEL_PATH,
                   'pos.model': POS_MODEL_PATH,
+                  'ner.model': NER_MODEL_PATH,
                   'outputFormat': outputFormat}  # conllu, json, xml, text
 
     properties_val = json.dumps(properties)

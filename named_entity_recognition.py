@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as et
 import sklearn_crfsuite
+from sklearn_crfsuite import metrics
 from util import util
+import random
 import nltk
 import dill
 
@@ -28,6 +30,48 @@ def train():
     dill.dump(crf, open(file_ner, 'wb'))
     return crf
 
+
+def test_approach(remove_o=True):
+    sentences = load_sentences()
+    random.seed = 1
+    random.shuffle(sentences)
+    size_s = len(sentences)
+    train_sents = sentences[:int(size_s-size_s/5)]
+    test_sents = sentences[int(size_s-size_s/5):]
+
+    print("Sentences:", size_s, "Train:", len(train_sents), "Test:", len(test_sents))
+
+    X_train = [sent2features(s) for s in train_sents]
+    y_train = [sent2labels(s) for s in train_sents]
+
+    X_test = [sent2features(s) for s in test_sents]
+    y_test = [sent2labels(s) for s in test_sents]
+
+    crf = sklearn_crfsuite.CRF(
+        algorithm='lbfgs',
+        c1=0.1,
+        c2=0.1,
+        max_iterations=100,
+        all_possible_transitions=True
+    )
+    crf.fit(X_train, y_train)
+    if remove_o:
+        labels = list(crf.classes_)
+        labels.remove('O')
+
+    y_pred = crf.predict(X_test)
+    f1 = metrics.flat_f1_score(y_test, y_pred, average='weighted', labels=labels)
+    print('F1-Score:'+ '%.3f' % (f1))
+    # group B and I results
+    sorted_labels = sorted(
+        labels,
+        key=lambda name: (name[1:], name[0])
+    )
+    print(metrics.flat_classification_report(
+        y_test, y_pred, labels=sorted_labels, digits=3
+    ))
+
+
 def predict(model, sentenca):
     ws = sentenca.split()
     words = []
@@ -36,9 +80,11 @@ def predict(model, sentenca):
     ret = model.predict([sent2features(words)])
     return ret
 
+
 def tokens(in_text):
     if in_text is None: return []
     return nltk.word_tokenize(util.treat_text(in_text))
+
 
 def load_sentences():
     # Documents-> DOC-> EM, ALT->EM, OMITIDO->EM

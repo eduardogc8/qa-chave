@@ -16,7 +16,6 @@ CORE_NAME = 'Chave'
 PATH_SYSTEM = 'data/solr/'
 PATH_DOCUMENTS = 'data/documents/indexing/'
 VERSION = '0'
-MAX_DOCUMENTS_RETRIEVAL = 10
 IP = 'localhost'
 PORT = 8983
 
@@ -95,23 +94,27 @@ class InformationRetrieval(object):
             return True
         return False
 
-    def retrievalDocuments(self, questions):
+    def retrievalDocuments(self, questions, printing=True):
         """For each question is retrieval the docid."""
-        count = 0
-        print('[', end=' ')
-        for question in questions:
-            if count < len(questions) / 10:
-                count += 1
-            else:
-                print('.', end=' ')
-                count = 0
 
-            ret = self.solr.query(CORE_NAME, {'q': question['query'], 'rows': str(MAX_DOCUMENTS_RETRIEVAL), 'fl': 'id'})
+        if printing:
+            count = 0
+            print('Retrieval Documents [', end=' ')
+        for question in questions:
+            if printing:
+                if count < len(questions) / 10:
+                    count += 1
+                else:
+                    print('.', end=' ')
+                    count = 0
+
+            ret = self.solr.query(CORE_NAME, question['query'])
             aux = []
             for doc in ret.docs:
                 aux.append(doc['id'])
             question['retrieval'] = aux
-        print('. ]')
+        if printing:
+            print('. ]')
         return questions
 
     def documentText(self, doc_id):
@@ -192,16 +195,18 @@ def retrievalPassages(document_text, ner_model, answer_type=None):
     return passages
 
 
-def retrievalPassagesQuestions(questions, ner_model, ir, answer_type=True):
+def retrievalPassagesQuestions(questions, ner_model, ir, answer_type=True, printing=True):
     """Para cada question in questions eh recuperado as passagens que tenha ao menos uma entidade de mesma predict_class."""
-    count = 0
-    print('[', end=' ')
+    if printing:
+        count = 0
+        print('Passages Retrieval [', end=' ')
     for question in questions:
-        if count < len(questions) / 10:
-            count += 1
-        else:
-            print('.', end=' ')
-            count = 0
+        if printing:
+            if count < len(questions) / 10:
+                count += 1
+            else:
+                print('.', end=' ')
+                count = 0
 
         question['passages'] = []
         rank = 1
@@ -216,5 +221,6 @@ def retrievalPassagesQuestions(questions, ner_model, ir, answer_type=True):
                     'passage': passage[0], 'entitys': passage[1], 'sequence': passage[2], 'doc_id': doc_id, 'doc_rank': rank
                     })
             rank += 1
-    print('. ]')
+    if printing:
+        print('. ]')
     return questions

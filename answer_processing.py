@@ -6,14 +6,14 @@ import question_processing as QP
 ANSWER_CANDIDATES_PARAMETERS_WEIGHT = {'doc_rank': -0.9, 'votes': 0.7}
 
 
-def answer_candidates(questions, ir, model_ner, answer_type_filter=False, loading=True):
+def answer_candidates(questions, ir, model_ner, answer_type_filter=False, printing=True):
     """Define para a lista de questoes suas respostas candidatas."""
-    count = 0
-    if loading:
-        print('[', end=' ')
+    if printing:
+        count = 0
+        print('Answer Candidates [', end=' ')
     for question in questions:
 
-        if loading:
+        if printing:
             if count < len(questions) / 10:
                 count += 1
             else:
@@ -66,7 +66,7 @@ def answer_candidates(questions, ir, model_ner, answer_type_filter=False, loadin
             if not candidate['full_answer'] == '':
                 insert_candidate(question, candidate)
                 candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
-    if loading:
+    if printing:
         print('. ]')
     return questions
 
@@ -134,17 +134,19 @@ def normalize_parameters(answer_candidates):
             candidate[parameter] = (candidate[parameter] - aux_dic[parameter][0]) / (aux_dic[parameter][1] - aux_dic[parameter][0])
 
 
-def finals_answer(questions):
+def finals_answer(questions, printing=True):
     """Define a resposta final."""
-    interval_print = 0
-    print('[', end=' ')
+    if printing:
+        interval_print = 0
+        print('Final Answer[', end=' ')
 
     for question in questions:
-        if interval_print < len(questions) / 10:
-            interval_print += 1
-        else:
-            print('.', end=' ')
-            interval_print = 0
+        if printing:
+            if interval_print < len(questions) / 10:
+                interval_print += 1
+            else:
+                print('.', end=' ')
+                interval_print = 0
         question['final_answer'] = 'N/A'
 
         # Normalize os parametros de cada candidate
@@ -160,8 +162,8 @@ def finals_answer(questions):
 
         if len(question['answer_candidates']) > 0:
             question['final_answer'] = sorted(question['answer_candidates'], key=lambda k: k['score'])[-1]['full_answer']
-
-    print('. ]')
+    if printing:
+        print('. ]')
     return questions
 
 

@@ -3,7 +3,7 @@ from util import util
 import question_processing as QP
 
 
-ANSWER_CANDIDATES_PARAMETERS_WEIGHT = {'doc_rank': -0.9, 'votes': 0.7}
+ANSWER_CANDIDATES_PARAMETERS_WEIGHT = {'doc_rank': -0.9, 'votes': 0.7, 'passage_score': 0.7}
 
 
 def answer_candidates(questions, ir, model_ner, answer_type_filter=False, printing=True):
@@ -34,7 +34,7 @@ def answer_candidates(questions, ir, model_ner, answer_type_filter=False, printi
                 if not control:
                     continue
 
-            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
+            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank'], 'passage_score': passage['passage_score']}
             #                         answer passage text, [(word, index)], 'w0 w1 w2 wn', num candiates with same answer
 
             last = False
@@ -49,7 +49,7 @@ def answer_candidates(questions, ir, model_ner, answer_type_filter=False, printi
                     if suffix == 'b':  # Inicio da entidade mencionada
                         if not candidate['full_answer'] == '':
                             insert_candidate(question, candidate)
-                            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
+                            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank'], 'passage_score': passage['passage_score']}
                     if class_entity == QP.classPT(question['predict_class'].lower()).lower():
                         candidate['words'].append((word, index))
                         candidate['full_answer'] += ' ' + word
@@ -61,11 +61,11 @@ def answer_candidates(questions, ir, model_ner, answer_type_filter=False, printi
                     if last:
                         if not candidate['full_answer'] == '':
                             insert_candidate(question, candidate)
-                            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
+                            candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank'], 'passage_score': passage['passage_score']}
                     last = False
             if not candidate['full_answer'] == '':
                 insert_candidate(question, candidate)
-                candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank']}
+                candidate = {'passage_text': passage['passage'], 'words': [], 'full_answer': '', 'votes': 0, 'doc_rank': passage['doc_rank'], 'passage_score': passage['passage_score']}
     if printing:
         print('. ]')
     return questions

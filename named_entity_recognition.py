@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as et
+from util import corenlp as CNLP
 import sklearn_crfsuite
 from sklearn_crfsuite import metrics
 from util import util
@@ -16,7 +17,23 @@ char_end_sentence = ['.', ';', '?', '!']
 
 def train():
     sentences = load_sentences()
-    X_train = [sent2features(s) for s in sentences]
+    #X_train = [sent2features(s) for s in sentences]
+    X_train = []
+    count = 0
+    classes = {}
+    tt = 0
+    for i, s in enumerate(sentences):
+        count += 1
+
+        for ss in s:
+            if ss[1] not in classes:
+                classes[ss[1]] = 0
+            classes[ss[1]] += 1
+            tt += 1
+        if count >= 10:
+            print(i, '/', len(sentences))
+            count = 0
+        X_train.append(sent2features(s))
     y_train = [sent2labels(s) for s in sentences]
 
     crf = sklearn_crfsuite.CRF(
@@ -28,6 +45,10 @@ def train():
     )
     crf.fit(X_train, y_train)
     dill.dump(crf, open(file_ner, 'wb'))
+
+    print(classes)
+    print(tt)
+
     return crf
 
 
@@ -84,6 +105,8 @@ def predict(model, sentenca):
 def tokens(in_text):
     if in_text is None: return []
     return nltk.word_tokenize(util.treat_text(in_text))
+    #print('\n+=', util.treat_text(in_text), '=+')
+    #return CNLP.tokens_pos(util.treat_text(in_text))[0]
 
 
 def load_sentences():
@@ -140,12 +163,14 @@ def load_sentences():
             sentence = []
     return sentences
 
-def word2features(sent, i):
-    word = sent[i][0]
 
+def word2features(sent, i):
+    sentence = ' '.join([x[0] for x in sent])
+    word = sent[i][0]
     features = {
         'bias': 1.0,
         'word.lower()': word.lower(),
+        #'word.pos': CNLP.pos(sentence, i),
         'word[-3:]': word[-3:],
         'word[-2:]': word[-2:],
         'word.isupper()': word.isupper(),
@@ -178,8 +203,10 @@ def word2features(sent, i):
 def sent2features(sent):
     return [word2features(sent, i) for i in range(len(sent))]
 
+
 def sent2labels(sent):
     return [label for token, label in sent]
+
 
 def sent2tokens(sent):
     return [token for token, label in sent]

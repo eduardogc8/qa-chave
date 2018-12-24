@@ -217,8 +217,12 @@ def retrievalPassagesQuestions(questions, ner_model, ir, answer_type=True, print
             else:
                 passages = retrievalPassages(text, ner_model)
             for passage in passages:
+                passage_score = 0
+                for term in question['query']['q'].split():
+                    passage_score += passage[0].count(term)
+                passage_score = (1+passage_score) * (1+(10 - rank/10))
                 question['passages'].append({
-                    'passage': passage[0], 'entitys': passage[1], 'sequence': passage[2], 'doc_id': doc_id, 'doc_rank': rank
+                    'passage': passage[0], 'entitys': passage[1], 'sequence': passage[2], 'doc_id': doc_id, 'doc_rank': rank, 'passage_score': passage_score
                     })
             rank += 1
     if printing:

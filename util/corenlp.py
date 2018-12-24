@@ -3,6 +3,8 @@ import json
 import urllib
 import socket
 import requests
+import xml.etree.ElementTree as ET
+
 
 DEP_MODEL_PATH = 'c://corenlp/models/pt-model/dep-parser'  # Relativo a pasta do servidor
 POS_MODEL_PATH = 'c://corenlp/models/pt-model/pos-tagger.dat'  # Relativo a pasta do servidor
@@ -20,6 +22,26 @@ def server_status():
     if not result == 0:
         return False
     return True
+
+
+def tokens_pos(text):
+    """Dado um texto de entrada, eh retornado duas lista, os tokens do texto e as POS."""
+    tokens = []
+    pos = []
+    output = call(text, 'tokenize,pos')
+    root = ET.fromstring(output)
+    sentences = root[0][0]
+    for sentence in sentences:
+        s_tokens = sentence[0]
+        for token in s_tokens:
+            tokens.append(token[0].text)
+            pos.append(token[3].text)
+    return tokens, pos
+
+
+def pos(text, index):
+    """Dado um texto de entrada, eh retornado duas lista, os tokens do texto e as POS."""
+    return tokens_pos(text)[1][index]
 
 
 def ssplit(text):
@@ -64,6 +86,7 @@ def call(text, annotators, outputFormat='xml'):
 
     if not server_status():
         # Conectar
+        print("start java -mx4g -cp " + PATH_SYSTEM + "\"*\"  edu.stanford.nlp.pipeline.StanfordCoreNLPServer")
         os.system("start java -mx4g -cp " + PATH_SYSTEM + "\"*\"  edu.stanford.nlp.pipeline.StanfordCoreNLPServer")
     response = requests.post(url, text.encode('utf-8'), headers=headers)
     response.encoding = 'utf-8'

@@ -16,6 +16,6 @@ def run(questions, qc_model, ir, ner_model, printing=True):
 def correct_answer_rate(questions):
     correct = 0
     for question in questions:
-        if question['correct_final_answer']:
+        if question['correct_final_answer'] and question['correct_answer_type']: # Remover segunda condicao
             correct += 1
     return correct / len(questions)

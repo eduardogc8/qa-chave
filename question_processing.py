@@ -15,7 +15,7 @@ import nltk
 
 
 answer_type_file = 'data/models/answer_type.sav'
-MAX_DOCUMENTS_RETRIEVAL = 10
+MAX_DOCUMENTS_RETRIEVAL = 30
 
 ##### QUESTION CLASSIFICATION #####
 
@@ -200,11 +200,13 @@ def testing(model, X_test, y_test):
 
         result = model.predict(X_test)
         print('Accuracy:', accuracy_score(result, y_test))
+        print('Precision:', precision_score(result, y_test, average="macro"))
+        print('Recall:', recall_score(result, y_test, average="macro"))
         print('F1 Score:', f1_score(result, y_test, average="macro"))
         cm = confusion_matrix(result, y_test, labels=['LOCATION', 'MEASURE', 'ORGANIZATION', 'PERSON', 'TIME'])
         return cm
 
-def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
+def plot_confusion_matrix(cm, classes, normalize=False, cmap=plt.cm.Blues):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
@@ -214,7 +216,7 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
+    plt.title('Matriz de Confusão')
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45)
@@ -228,8 +230,9 @@ def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix'
                  color="white" if cm[i, j] > thresh else "black")
 
     plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
+    plt.ylabel('Valor Verdadeiro')
+    plt.xlabel('Valor Previsto')
+    return plt
 
 def queryFormulation(questions):
     for question in questions:

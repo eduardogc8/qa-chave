@@ -115,8 +115,9 @@ def pair_classification(c, t):
     if c == 'F' or c == 'FACTOID':
         if t == 'COUNT':
             return 'MEASURE'
-        else:
-            return t
+        elif t == 'MANNER':
+            return 'DEFINITION'
+        return t
     if c == 'L' or c == 'LIST':
         if t == 'COUNT':
             return 'MEASURE'
@@ -133,11 +134,11 @@ def pair_classification(c, t):
     if c == 'OTHER' and (t == 'FACTOID' or t == 'LIST'):
         return 'OTHER'
     if c == 'OTHER' and not (t == 'FACTOID' or t == 'LIST'):
+        if t == 'MANNER':
+            return 'DEFINITION'
         return t
     if c == 'PERSON' and t == 'DEFINITION':
         return 'DEFINITION'
     if c == 'PERSON' and not t == 'DEFINITION':
         return 'PERSON'
-    if c == 'TIME':
-        return 'TIME'
     return c

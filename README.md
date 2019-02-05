@@ -14,7 +14,7 @@ This model was trained using the Harem collection https://www.linguateca.pt/HARE
 ## Article
 https://link.springer.com/chapter/10.1007/978-3-319-99722-3_14
 
-## For Cite:
+## How to cite
 __Cortes, Eduardo G., Vinicius Woloszyn, and Dante AC Barone. "When, Where, Who, What or Why? A Hybrid Model to Question Answering Systems." International Conference on Computational Processing of the Portuguese Language. Springer, Cham, 2018.__
 
 bibtex:
